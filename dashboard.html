@@ -98,7 +98,7 @@
       </div>
     </div>
 
-    <div class="dash__row">
+    <div class="dash__row dash__row--three">
       <!-- RETURN REASONS -->
       <div class="card card--reasons" data-dash-animate data-dash-animate-delay="250">
         <div class="card__header">
@@ -108,20 +108,20 @@
         </div>
       </div>
 
-      <!-- RIGHT COLUMN: TREND + CHANNEL -->
-      <div class="dash__row-right">
-        <div class="card card--mini" data-dash-animate data-dash-animate-delay="300">
-          <div class="card__header">
-            <h3 class="card__title">Return Rate Trend</h3>
-          </div>
-          <div class="sparkline-wrap" id="sparkline-container"></div>
+      <!-- TREND -->
+      <div class="card card--mini" data-dash-animate data-dash-animate-delay="300">
+        <div class="card__header">
+          <h3 class="card__title">Return Rate Trend</h3>
         </div>
-        <div class="card card--mini" data-dash-animate data-dash-animate-delay="350">
-          <div class="card__header">
-            <h3 class="card__title">Returns by Channel</h3>
-          </div>
-          <div class="channel-list" id="channel-container"></div>
+        <div class="sparkline-wrap" id="sparkline-container"></div>
+      </div>
+
+      <!-- CHANNEL -->
+      <div class="card card--mini" data-dash-animate data-dash-animate-delay="350">
+        <div class="card__header">
+          <h3 class="card__title">Returns by Channel</h3>
         </div>
+        <div class="channel-list" id="channel-container"></div>
       </div>
     </div>
 
@@ -226,6 +226,21 @@
           </tbody>
         </table>
       </div>
+    </div>
+
+    <!-- INTERVENTION EFFECTIVENESS -->
+    <div class="card card--interventions" data-dash-animate data-dash-animate-delay="400">
+      <div class="card__header">
+        <h3 class="card__title">Intervention Effectiveness</h3>
+      </div>
+      <div class="intervention-row intervention-row--header">
+        <div class="intervention-row__th">Intervention</div>
+        <div class="intervention-row__th" style="text-align:right">Rate</div>
+        <div class="intervention-row__th"></div>
+        <div class="intervention-row__th" style="text-align:right">Prevented</div>
+        <div class="intervention-row__th" style="text-align:right">Saved</div>
+      </div>
+      <div class="interventions-grid" id="interventions-container"></div>
     </div>
 
   </main>

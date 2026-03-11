@@ -9,9 +9,15 @@ const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 const Anthropic = require('@anthropic-ai/sdk').default;
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// --- AI Provider Selection ---
+// Supports both Anthropic (ANTHROPIC_API_KEY) and Google Gemini (GOOGLE_API_KEY).
+// If both are set, Google takes priority. Change the order below to prefer Anthropic.
+const AI_PROVIDER = process.env.GOOGLE_API_KEY ? 'google' : process.env.ANTHROPIC_API_KEY ? 'anthropic' : null;
 
 // --- Middleware ---
 app.use(cors());
@@ -33,8 +39,9 @@ const upload = multer({
   }
 });
 
-// --- Anthropic Client ---
-const anthropic = new Anthropic();
+// --- AI Clients ---
+const anthropic = process.env.ANTHROPIC_API_KEY ? new Anthropic() : null;
+const genAI = process.env.GOOGLE_API_KEY ? new GoogleGenerativeAI(process.env.GOOGLE_API_KEY) : null;
 
 // --- Dashboard Schema for Claude ---
 const DASHBOARD_SCHEMA = `You are a data analytics agent for Kept.ai, a returns prevention platform. Your job is to analyze raw e-commerce data and produce a structured JSON dashboard.
@@ -149,23 +156,34 @@ Analyze this data carefully:
 
 Return ONLY the JSON object, nothing else.`;
 
-    console.log(`[${new Date().toISOString()}] Processing ${files.length} file(s) for "${companyName}"...`);
+    console.log(`[${new Date().toISOString()}] Processing ${files.length} file(s) for "${companyName}" via ${AI_PROVIDER}...`);
 
-    // Call Claude
-    const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 8192,
-      system: DASHBOARD_SCHEMA,
-      messages: [
-        { role: 'user', content: userPrompt }
-      ]
-    });
+    let responseText;
 
-    // Extract the response text
-    const responseText = message.content
-      .filter(block => block.type === 'text')
-      .map(block => block.text)
-      .join('');
+    if (AI_PROVIDER === 'google') {
+      // Call Google Gemini
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+      const result = await model.generateContent({
+        systemInstruction: DASHBOARD_SCHEMA,
+        contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+        generationConfig: { maxOutputTokens: 65536 },
+      });
+      responseText = result.response.text();
+    } else {
+      // Call Anthropic Claude
+      const message = await anthropic.messages.create({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 8192,
+        system: DASHBOARD_SCHEMA,
+        messages: [
+          { role: 'user', content: userPrompt }
+        ]
+      });
+      responseText = message.content
+        .filter(block => block.type === 'text')
+        .map(block => block.text)
+        .join('');
+    }
 
     // Parse the JSON response
     let dashboardData;
@@ -200,8 +218,11 @@ Return ONLY the JSON object, nothing else.`;
   } catch (err) {
     console.error('Processing error:', err);
 
+    if (!AI_PROVIDER) {
+      return res.status(500).json({ error: 'No API key configured. Set GOOGLE_API_KEY or ANTHROPIC_API_KEY environment variable.' });
+    }
     if (err.status === 401) {
-      return res.status(500).json({ error: 'API key not configured. Set ANTHROPIC_API_KEY environment variable.' });
+      return res.status(500).json({ error: `Invalid ${AI_PROVIDER} API key. Check your environment variable.` });
     }
 
     res.status(500).json({
@@ -212,11 +233,12 @@ Return ONLY the JSON object, nothing else.`;
 
 // --- Health check ---
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', hasApiKey: !!process.env.ANTHROPIC_API_KEY });
+  res.json({ status: 'ok', hasApiKey: !!AI_PROVIDER, provider: AI_PROVIDER });
 });
 
 // --- Start server ---
 app.listen(PORT, () => {
   console.log(`Kept.ai server running at http://localhost:${PORT}`);
-  console.log(`API key configured: ${!!process.env.ANTHROPIC_API_KEY}`);
+  console.log(`AI provider: ${AI_PROVIDER || 'none'}`);
+  console.log(`API key configured: ${!!AI_PROVIDER}`);
 });

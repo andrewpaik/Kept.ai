@@ -14,6 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let aiInsights = COMPANIES[activeCompanyId].aiInsights;
   let channelData = COMPANIES[activeCompanyId].channelData;
   let avgOrderValue = COMPANIES[activeCompanyId].avgOrderValue;
+  let products = COMPANIES[activeCompanyId].products;
+  let avgReturnCost = COMPANIES[activeCompanyId].avgReturnCost;
   let currentPeriod = '1Y';
 
   // ===== UTILITY =====
@@ -65,6 +67,61 @@ document.addEventListener('DOMContentLoaded', () => {
     return raw;
   }
 
+  // Generate period-specific product stats derived from the chart period data.
+  // Product returned counts sum to the period's totalReturns, and return costs use avgReturnCost.
+  function varyProducts(baseProducts, periodData, periodKey) {
+    const h = strHash(periodKey + activeCompanyId);
+    const totalReturns = periodData.reduce((s, d) => s + d.returns, 0);
+    const totalOrders = periodData.reduce((s, d) => s + d.orders, 0);
+
+    // Base weights from each product's returned count
+    const baseReturnedSum = baseProducts.reduce((s, p) => s + p.returned, 0) || 1;
+    const baseSoldSum = baseProducts.reduce((s, p) => s + p.sold, 0) || 1;
+
+    // Compute varied weights with small deterministic offsets
+    const raw = baseProducts.map((p, i) => {
+      const retWeightOff = (((h * (i + 3) * 13) % 11) - 5) * 0.008;
+      const retWeight = Math.max(0.05, (p.returned / baseReturnedSum) + retWeightOff);
+      const soldWeight = Math.max(0.05, p.sold / baseSoldSum);
+      return { ...p, retWeight, soldWeight };
+    });
+
+    // Normalize return weights
+    const retWeightSum = raw.reduce((s, r) => s + r.retWeight, 0);
+    const soldWeightSum = raw.reduce((s, r) => s + r.soldWeight, 0);
+
+    // Distribute returned counts to sum exactly to totalReturns
+    const totalReturnCost = Math.round(totalReturns * avgReturnCost);
+    let assignedReturned = 0;
+    let assignedSold = 0;
+    let assignedCost = 0;
+    return raw.map((r, i) => {
+      let returned, sold, returnCost;
+      if (i < raw.length - 1) {
+        returned = Math.round(totalReturns * r.retWeight / retWeightSum);
+        sold = Math.round(totalOrders * r.soldWeight / soldWeightSum);
+        returnCost = Math.round(returned * avgReturnCost);
+        assignedReturned += returned;
+        assignedSold += sold;
+        assignedCost += returnCost;
+      } else {
+        returned = totalReturns - assignedReturned;
+        sold = totalOrders - assignedSold;
+        returnCost = totalReturnCost - assignedCost;
+      }
+
+      sold = Math.max(returned, sold); // sold must be >= returned
+      const returnRate = sold > 0 ? +((returned / sold) * 100).toFixed(1) : 0;
+      const risk = returnRate >= 33 ? 'critical' : returnRate >= 25 ? 'high' : 'moderate';
+
+      // Vary reason percentage slightly
+      const reasonOff = (((h * (i + 2) * 7) % 7) - 3);
+      const reasonPct = Math.max(30, Math.min(95, r.reasonPct + reasonOff));
+
+      return { ...r, sold, returned, returnRate, returnCost, risk, reasonPct };
+    });
+  }
+
   // Generate period-specific channel splits from the base data
   function varyChannels(baseChannels, periodData, periodKey) {
     const totalReturns = periodData.reduce((s, d) => s + d.returns, 0);
@@ -113,15 +170,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const totalReturns = data.reduce((s, d) => s + d.returns, 0);
     const totalPrevented = data.reduce((s, d) => s + d.prevented, 0);
     const returnRate = totalOrders > 0 ? ((totalReturns / totalOrders) * 100) : 0;
-    // Industry data: processing costs 20-65% of item price (avg ~33%),
-    // only 40% of returned inventory resold at full value (~30% depreciation loss),
-    // plus reverse logistics at 15-30 cents per dollar (~21%)
-    // Total cost per return ≈ 66% of item value
-    const returnCost = Math.round(totalReturns * avgOrderValue * 0.66);
-
-    // Prevented return = retained revenue + avoided return costs
-    // 100% revenue retained + 33% processing avoided + 21% logistics avoided
-    const savedCost = Math.round(totalPrevented * avgOrderValue * 1.54);
+    const returnCost = Math.round(totalReturns * avgReturnCost);
+    const savedCost = Math.round(totalPrevented * avgReturnCost);
 
     const kpiEls = document.querySelectorAll('.kpi-card__value');
     const deltaEls = document.querySelectorAll('.kpi-card__delta');
@@ -321,25 +371,25 @@ document.addEventListener('DOMContentLoaded', () => {
     reasonsEl.innerHTML = '';
     const activeReasons = dataOverride || reasonsData;
 
-    // Remove old pie tooltips
-    document.querySelectorAll('.pie-tooltip').forEach(el => el.remove());
-
+    // Mini donut pie
     const pieWrap = document.createElement('div');
     pieWrap.className = 'reasons__pie-wrap';
 
-    const size = 220;
+    const size = 120;
     const cx = size / 2;
     const cy = size / 2;
-    const r = 90;
+    const r = 50;
+    const hole = 30;
 
     const svgNS = 'http://www.w3.org/2000/svg';
     const svg = document.createElementNS(svgNS, 'svg');
     svg.setAttribute('viewBox', `0 0 ${size} ${size}`);
+    svg.setAttribute('width', size);
+    svg.setAttribute('height', size);
     svg.setAttribute('class', 'reasons__pie');
 
     let cumulative = 0;
     const totalPct = activeReasons.reduce((s, d) => s + d.pct, 0);
-
     const slicePaths = [];
 
     activeReasons.forEach((d, i) => {
@@ -348,156 +398,114 @@ document.addEventListener('DOMContentLoaded', () => {
       cumulative += d.pct;
       const endAngle = startAngle + sliceAngle;
 
-      const midAngle = startAngle + sliceAngle / 2;
-      const midRad = (midAngle * Math.PI) / 180;
-
       const startRad = (startAngle * Math.PI) / 180;
       const endRad = (endAngle * Math.PI) / 180;
-
-      const x1 = cx + r * Math.cos(startRad);
-      const y1 = cy + r * Math.sin(startRad);
-      const x2 = cx + r * Math.cos(endRad);
-      const y2 = cy + r * Math.sin(endRad);
+      const midRad = ((startAngle + sliceAngle / 2) * Math.PI) / 180;
       const largeArc = sliceAngle > 180 ? 1 : 0;
 
-      const path = document.createElementNS(svgNS, 'path');
-      const pathD = `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z`;
-      path.setAttribute('d', pathD);
-      path.setAttribute('fill', d.color);
-      path.setAttribute('data-slice-index', i);
-      path.style.opacity = animate && !reducedMotion ? '0' : '1';
-      path.style.transition = 'opacity 0.4s ease-out, transform 0.2s ease, filter 0.2s ease';
-      path.style.transformOrigin = `${cx}px ${cy}px`;
-      path.style.cursor = 'pointer';
+      // Outer arc
+      const ox1 = cx + r * Math.cos(startRad);
+      const oy1 = cy + r * Math.sin(startRad);
+      const ox2 = cx + r * Math.cos(endRad);
+      const oy2 = cy + r * Math.sin(endRad);
+      // Inner arc
+      const ix1 = cx + hole * Math.cos(endRad);
+      const iy1 = cy + hole * Math.sin(endRad);
+      const ix2 = cx + hole * Math.cos(startRad);
+      const iy2 = cy + hole * Math.sin(startRad);
 
-      path._hoverTx = Math.cos(midRad) * 6;
-      path._hoverTy = Math.sin(midRad) * 6;
+      const path = document.createElementNS(svgNS, 'path');
+      path.setAttribute('d', `M ${ox1} ${oy1} A ${r} ${r} 0 ${largeArc} 1 ${ox2} ${oy2} L ${ix1} ${iy1} A ${hole} ${hole} 0 ${largeArc} 0 ${ix2} ${iy2} Z`);
+      path.setAttribute('fill', d.color);
+      path.style.cursor = 'pointer';
+      path.style.transition = 'opacity 0.2s ease, filter 0.2s ease';
+      path._hoverTx = Math.cos(midRad) * 4;
+      path._hoverTy = Math.sin(midRad) * 4;
+      path.style.transformOrigin = `${cx}px ${cy}px`;
+
+      if (animate && !reducedMotion) {
+        path.style.opacity = '0';
+        setTimeout(() => { path.style.opacity = '1'; }, i * 60 + 50);
+      }
 
       svg.appendChild(path);
       slicePaths.push(path);
-
-      if (animate && !reducedMotion) {
-        setTimeout(() => { path.style.opacity = '1'; }, i * 80 + 150);
-      }
     });
 
-    const hole = document.createElementNS(svgNS, 'circle');
-    hole.setAttribute('cx', cx);
-    hole.setAttribute('cy', cy);
-    hole.setAttribute('r', 52);
-    const cardBg = getComputedStyle(document.documentElement).getPropertyValue('--bg-card').trim() || '#FFFFFF';
-    hole.setAttribute('fill', cardBg);
-    hole.style.pointerEvents = 'none';
-    svg.appendChild(hole);
-
-    const centerLabel = document.createElementNS(svgNS, 'text');
-    centerLabel.setAttribute('x', cx);
-    centerLabel.setAttribute('y', cy - 6);
-    centerLabel.setAttribute('text-anchor', 'middle');
-    centerLabel.setAttribute('font-size', '11');
-    const mutedColor = getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim() || '#8E96A6';
-    centerLabel.setAttribute('fill', mutedColor);
-    centerLabel.setAttribute('font-family', 'DM Sans, sans-serif');
-    centerLabel.setAttribute('font-weight', '600');
-    centerLabel.textContent = 'Total';
-    centerLabel.style.pointerEvents = 'none';
-    svg.appendChild(centerLabel);
-
-    const centerValue = document.createElementNS(svgNS, 'text');
-    centerValue.setAttribute('x', cx);
-    centerValue.setAttribute('y', cy + 14);
-    centerValue.setAttribute('text-anchor', 'middle');
-    centerValue.setAttribute('font-size', '20');
+    // Center total
+    const totalCount = activeReasons.reduce((s, d) => s + d.count, 0);
     const textColor = getComputedStyle(document.documentElement).getPropertyValue('--text').trim() || '#0F172A';
-    centerValue.setAttribute('fill', textColor);
-    centerValue.setAttribute('font-family', 'DM Sans, sans-serif');
-    centerValue.setAttribute('font-weight', '800');
-    centerValue.textContent = activeReasons.reduce((s, d) => s + d.count, 0).toLocaleString('en-US');
-    centerValue.style.pointerEvents = 'none';
-    svg.appendChild(centerValue);
+    const mutedColor = getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim() || '#8E96A6';
+
+    const valText = document.createElementNS(svgNS, 'text');
+    valText.setAttribute('x', cx);
+    valText.setAttribute('y', cy + 1);
+    valText.setAttribute('text-anchor', 'middle');
+    valText.setAttribute('dominant-baseline', 'central');
+    valText.setAttribute('font-size', '14');
+    valText.setAttribute('font-weight', '800');
+    valText.setAttribute('fill', textColor);
+    valText.setAttribute('font-family', 'DM Sans, sans-serif');
+    valText.textContent = totalCount >= 1000 ? (totalCount / 1000).toFixed(1) + 'k' : fmt(totalCount);
+    valText.style.pointerEvents = 'none';
+    svg.appendChild(valText);
 
     pieWrap.appendChild(svg);
 
-    const legend = document.createElement('div');
-    legend.className = 'reasons__legend';
+    // Rows list
+    const list = document.createElement('div');
+    list.className = 'reasons__list';
 
+    const rows = [];
     activeReasons.forEach((r) => {
-      const item = document.createElement('div');
-      item.className = 'reasons__legend-item';
-      item.innerHTML = `
-        <span class="reasons__legend-dot" style="background:${r.color}"></span>
-        <span class="reasons__legend-name">${r.name}</span>
-        <span class="reasons__legend-pct">${r.pct}%</span>
-        <span class="reasons__legend-count">${r.count} returns</span>
+      const row = document.createElement('div');
+      row.className = 'reasons__row';
+      row.innerHTML = `
+        <span class="reasons__dot" style="background:${r.color}"></span>
+        <span class="reasons__name">${r.name}</span>
+        <span class="reasons__pct">${r.pct}%</span>
+        <span class="reasons__count">${fmt(r.count)}</span>
       `;
-      legend.appendChild(item);
+      list.appendChild(row);
+      rows.push(row);
     });
 
     reasonsEl.appendChild(pieWrap);
-    reasonsEl.appendChild(legend);
+    reasonsEl.appendChild(list);
 
-    // --- Pie tooltip ---
-    const pieTooltip = document.createElement('div');
-    pieTooltip.className = 'pie-tooltip';
-    pieTooltip.style.display = 'none';
-    document.body.appendChild(pieTooltip);
-
-    const legendItems = legend.querySelectorAll('.reasons__legend-item');
-
-    function highlightSlice(index) {
+    // Hover interactions
+    function highlight(index) {
       slicePaths.forEach((p, j) => {
         if (j === index) {
           p.style.transform = `translate(${p._hoverTx}px, ${p._hoverTy}px)`;
           p.style.filter = 'brightness(1.15)';
         } else {
-          p.style.transform = 'translate(0,0)';
           p.style.filter = 'brightness(0.7)';
-          p.style.opacity = '0.5';
+          p.style.opacity = '0.45';
         }
       });
-      legendItems.forEach((item, j) => {
-        item.style.opacity = j === index ? '1' : '0.35';
+      rows.forEach((r, j) => {
+        r.style.opacity = j === index ? '1' : '0.3';
       });
     }
 
-    function resetSlices() {
+    function reset() {
       slicePaths.forEach(p => {
         p.style.transform = 'translate(0,0)';
         p.style.filter = 'none';
         p.style.opacity = '1';
       });
-      legendItems.forEach(item => {
-        item.style.opacity = '1';
-      });
-      pieTooltip.style.display = 'none';
+      rows.forEach(r => { r.style.opacity = '1'; });
     }
 
     slicePaths.forEach((path, i) => {
-      path.addEventListener('mouseenter', () => {
-        highlightSlice(i);
-        const d = activeReasons[i];
-        pieTooltip.innerHTML = `
-          <span class="pie-tooltip__dot" style="background:${d.color}"></span>
-          <strong>${d.name}</strong>
-          <span class="pie-tooltip__pct">${d.pct}%</span>
-          <span class="pie-tooltip__count">${d.count} returns</span>
-        `;
-        pieTooltip.style.display = 'flex';
-      });
-
-      path.addEventListener('mousemove', (e) => {
-        pieTooltip.style.left = e.pageX + 14 + 'px';
-        pieTooltip.style.top = e.pageY - 14 + 'px';
-      });
-
-      path.addEventListener('mouseleave', resetSlices);
+      path.addEventListener('mouseenter', () => highlight(i));
+      path.addEventListener('mouseleave', reset);
     });
 
-    legendItems.forEach((item, i) => {
-      item.style.cursor = 'pointer';
-      item.style.transition = 'opacity 0.2s ease';
-      item.addEventListener('mouseenter', () => highlightSlice(i));
-      item.addEventListener('mouseleave', resetSlices);
+    rows.forEach((row, i) => {
+      row.addEventListener('mouseenter', () => highlight(i));
+      row.addEventListener('mouseleave', reset);
     });
   }
 
@@ -616,17 +624,28 @@ document.addEventListener('DOMContentLoaded', () => {
       // Static points and month labels
       const staticCircles = [];
       const staticLabels = [];
+      const staticMonthLabels = [];
+
+      // Determine label skip interval to avoid crowding
+      const n = points.length;
+      const labelStep = n > 12 ? 3 : n > 8 ? 2 : 1;
+
+      const dotR = n > 12 ? '2.5' : '3.5';
+      const dotStroke = n > 12 ? '1.5' : '2';
 
       points.forEach((p, i) => {
         const circle = document.createElementNS(svgNS, 'circle');
         circle.setAttribute('cx', p.x);
         circle.setAttribute('cy', p.y);
-        circle.setAttribute('r', '3.5');
-        circle.setAttribute('fill', i === points.length - 1 ? greenColor : lineColor);
+        circle.setAttribute('r', dotR);
+        circle.setAttribute('fill', i === n - 1 ? greenColor : lineColor);
         circle.setAttribute('stroke', cardBg);
-        circle.setAttribute('stroke-width', '2');
+        circle.setAttribute('stroke-width', dotStroke);
         svg.appendChild(circle);
         staticCircles.push(circle);
+
+        // Show rate label only for visible points (first, last, every Nth)
+        const showLabel = i === 0 || i === n - 1 || i % labelStep === 0;
 
         const text = document.createElementNS(svgNS, 'text');
         text.setAttribute('x', p.x);
@@ -634,9 +653,10 @@ document.addEventListener('DOMContentLoaded', () => {
         text.setAttribute('text-anchor', 'middle');
         text.setAttribute('font-size', '10');
         text.setAttribute('font-weight', '700');
-        text.setAttribute('fill', i === points.length - 1 ? greenColor : textColor);
+        text.setAttribute('fill', i === n - 1 ? greenColor : textColor);
         text.setAttribute('font-family', 'DM Sans, sans-serif');
         text.textContent = p.rate.toFixed(1) + '%';
+        if (!showLabel) text.style.display = 'none';
         svg.appendChild(text);
         staticLabels.push(text);
 
@@ -648,7 +668,9 @@ document.addEventListener('DOMContentLoaded', () => {
         monthLabel.setAttribute('fill', textColor);
         monthLabel.setAttribute('font-family', 'DM Sans, sans-serif');
         monthLabel.textContent = p.label;
+        if (!showLabel) monthLabel.style.display = 'none';
         svg.appendChild(monthLabel);
+        staticMonthLabels.push(monthLabel);
       });
 
       // Delta badge
@@ -687,9 +709,16 @@ document.addEventListener('DOMContentLoaded', () => {
           hoverDot.setAttribute('fill', i === points.length - 1 ? greenColor : lineColor);
           hoverDot.style.display = '';
 
-          // Dim other points
+          // Dim other points; show hovered label even if normally hidden
           staticCircles.forEach((c, j) => { c.style.opacity = j === i ? '0' : '0.3'; });
-          staticLabels.forEach((t, j) => { t.style.opacity = j === i ? '1' : '0.3'; });
+          staticLabels.forEach((t, j) => {
+            if (j === i) { t.style.display = ''; t.style.opacity = '1'; }
+            else { t.style.opacity = '0.3'; }
+          });
+          staticMonthLabels.forEach((t, j) => {
+            if (j === i) { t.style.display = ''; t.style.opacity = '1'; }
+            else { t.style.opacity = '0.3'; }
+          });
 
           // Show tooltip
           const prevRate = i > 0 ? points[i - 1].rate : null;
@@ -711,7 +740,16 @@ document.addEventListener('DOMContentLoaded', () => {
           hoverLine.style.display = 'none';
           hoverDot.style.display = 'none';
           staticCircles.forEach(c => { c.style.opacity = '1'; });
-          staticLabels.forEach(t => { t.style.opacity = '1'; });
+          staticLabels.forEach((t, j) => {
+            t.style.opacity = '1';
+            const vis = j === 0 || j === n - 1 || j % labelStep === 0;
+            if (!vis) t.style.display = 'none';
+          });
+          staticMonthLabels.forEach((t, j) => {
+            t.style.opacity = '1';
+            const vis = j === 0 || j === n - 1 || j % labelStep === 0;
+            if (!vis) t.style.display = 'none';
+          });
           sparkTooltip.style.display = 'none';
         });
 
@@ -825,6 +863,100 @@ document.addEventListener('DOMContentLoaded', () => {
     attachSortHandlers();
   }
 
+  // ===== INTERVENTION EFFECTIVENESS =====
+
+  let interventions = COMPANIES[activeCompanyId].interventions;
+
+  function varyInterventions(baseInterventions, periodKey, periodData) {
+    const h = strHash(periodKey + activeCompanyId);
+
+    // The total prevented from the chart data is the source of truth
+    const chartPrevented = periodData.reduce((s, d) => s + d.prevented, 0);
+
+    // Compute base weights from each intervention's prevented count
+    const baseTotal = baseInterventions.reduce((s, iv) => s + iv.prevented, 0) || 1;
+
+    // Distribute chartPrevented proportionally with small deterministic offsets
+    const raw = baseInterventions.map((iv, i) => {
+      const weightOff = (((h * (i + 5) * 11) % 9) - 4) * 0.01;
+      const weight = Math.max(0.05, (iv.prevented / baseTotal) + weightOff);
+      return { ...iv, weight };
+    });
+
+    // Normalize weights
+    const weightSum = raw.reduce((s, r) => s + r.weight, 0);
+
+    // Assign prevented counts that sum exactly to chartPrevented
+    let assigned = 0;
+    const result = raw.map((r, i) => {
+      let prevented;
+      if (i < raw.length - 1) {
+        prevented = Math.round(chartPrevented * r.weight / weightSum);
+        assigned += prevented;
+      } else {
+        prevented = chartPrevented - assigned;
+      }
+
+      // Derive triggered from prevented and a varied rate
+      const rateOff = (((h * (i + 3) * 13) % 9) - 4) * 0.7;
+      const rate = Math.max(10, Math.min(65, +(r.rate + rateOff).toFixed(1)));
+      const triggered = rate > 0 ? Math.round(prevented / (rate / 100)) : 0;
+
+      return { type: r.type, triggered, prevented, rate };
+    });
+
+    return result;
+  }
+
+  function renderInterventions(data, costPerReturn) {
+    const container = document.getElementById('interventions-container');
+    if (!container) return;
+    container.innerHTML = '';
+
+    let totalTriggered = 0;
+    let totalPrevented = 0;
+    let totalSavings = 0;
+
+    data.forEach(iv => {
+      const savings = iv.prevented * costPerReturn;
+      totalTriggered += iv.triggered;
+      totalPrevented += iv.prevented;
+      totalSavings += savings;
+
+      const row = document.createElement('div');
+      row.className = 'intervention-row';
+      row.innerHTML = `
+        <div class="intervention-row__type">${iv.type}</div>
+        <div class="intervention-row__rate">${iv.rate}%</div>
+        <div class="intervention-row__bar-wrap">
+          <div class="intervention-row__bar" style="width: ${iv.rate}%"></div>
+        </div>
+        <div class="intervention-row__stats">
+          <span class="intervention-row__prevented">${iv.prevented}</span> / ${fmt(iv.triggered)}
+        </div>
+        <div class="intervention-row__savings">$${fmt(Math.round(savings))}</div>
+      `;
+      container.appendChild(row);
+    });
+
+    // Totals row
+    const totalRate = totalTriggered > 0 ? ((totalPrevented / totalTriggered) * 100).toFixed(1) : '0.0';
+    const totals = document.createElement('div');
+    totals.className = 'intervention-row intervention-row--total';
+    totals.innerHTML = `
+      <div class="intervention-row__type">Total</div>
+      <div class="intervention-row__rate">${totalRate}%</div>
+      <div class="intervention-row__bar-wrap">
+        <div class="intervention-row__bar" style="width: ${totalRate}%"></div>
+      </div>
+      <div class="intervention-row__stats">
+        <span class="intervention-row__prevented">${fmt(totalPrevented)}</span> / ${fmt(totalTriggered)}
+      </div>
+      <div class="intervention-row__savings">$${fmt(Math.round(totalSavings))}</div>
+    `;
+    container.appendChild(totals);
+  }
+
   // ===== TOOLTIPS =====
 
   const tooltip = document.createElement('div');
@@ -883,6 +1015,8 @@ document.addEventListener('DOMContentLoaded', () => {
       renderSparkline(pd, true);
       renderReasons(true, varyReasons(reasonsData, pd, period));
       renderChannels(channelData, pd, period, true);
+      renderProductTable(varyProducts(products, pd, period));
+      renderInterventions(varyInterventions(interventions, period, pd), avgReturnCost);
     });
   });
 
@@ -1115,6 +1249,9 @@ document.addEventListener('DOMContentLoaded', () => {
     aiInsights = co.aiInsights;
     channelData = co.channelData;
     avgOrderValue = co.avgOrderValue;
+    products = co.products;
+    avgReturnCost = co.avgReturnCost || 50;
+    interventions = co.interventions || [];
 
     // Update nav
     navStoreName.textContent = co.name;
@@ -1132,7 +1269,8 @@ document.addEventListener('DOMContentLoaded', () => {
     renderReasons(true, varyReasons(reasonsData, datasets[currentPeriod], currentPeriod));
     renderSparkline(datasets[currentPeriod], true);
     renderChannels(channelData, datasets[currentPeriod], currentPeriod, true);
-    renderProductTable(co.products);
+    renderProductTable(varyProducts(products, datasets[currentPeriod], currentPeriod));
+    renderInterventions(varyInterventions(interventions, currentPeriod, datasets[currentPeriod]), avgReturnCost);
 
     // Rebuild company list to update active state
     buildCompanyList();
@@ -1431,5 +1569,6 @@ document.addEventListener('DOMContentLoaded', () => {
   renderReasons(true, varyReasons(reasonsData, datasets[currentPeriod], currentPeriod));
   renderSparkline(datasets[currentPeriod], true);
   renderChannels(channelData, datasets[currentPeriod], currentPeriod, true);
-  renderProductTable(COMPANIES[activeCompanyId].products);
+  renderProductTable(varyProducts(products, datasets[currentPeriod], currentPeriod));
+  renderInterventions(varyInterventions(interventions, currentPeriod, datasets[currentPeriod]), avgReturnCost);
 });

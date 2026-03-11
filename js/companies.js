@@ -159,6 +159,12 @@ const COMPANIES = {
       { channel: 'Mobile App', returns: 689, pct: 13, rate: 15.2 },
       { channel: 'In-Store', returns: 278, pct: 5, rate: 8.1 },
     ],
+    interventions: [
+      { type: 'Size Guide Prompt', triggered: 412, prevented: 147, rate: 35.7 },
+      { type: 'Fit Confirmation', triggered: 234, prevented: 89, rate: 38.0 },
+      { type: 'True Color Modal', triggered: 156, prevented: 52, rate: 33.3 },
+      { type: 'Review Highlights', triggered: 89, prevented: 24, rate: 27.0 },
+    ],
   },
 
   'luxe-beauty': {
@@ -314,6 +320,12 @@ const COMPANIES = {
       { channel: 'Mobile App', returns: 54, pct: 10, rate: 9.2 },
       { channel: 'In-Store', returns: 30, pct: 5, rate: 4.7 },
     ],
+    interventions: [
+      { type: 'Shade Match Quiz', triggered: 587, prevented: 211, rate: 35.9 },
+      { type: 'Sensitivity Check', triggered: 312, prevented: 134, rate: 42.9 },
+      { type: 'Swatch Comparison', triggered: 198, prevented: 63, rate: 31.8 },
+      { type: 'Review Highlights', triggered: 143, prevented: 37, rate: 25.9 },
+    ],
   },
 
   'techgear-pro': {
@@ -467,6 +479,12 @@ const COMPANIES = {
       { channel: 'Marketplace', returns: 168, pct: 34, rate: 11.3 },
       { channel: 'Mobile App', returns: 49, pct: 10, rate: 8.6 },
       { channel: 'In-Store', returns: 24, pct: 5, rate: 5.1 },
+    ],
+    interventions: [
+      { type: 'Spec Comparison Tool', triggered: 324, prevented: 126, rate: 38.9 },
+      { type: 'Compatibility Check', triggered: 267, prevented: 107, rate: 40.1 },
+      { type: 'Video Demo Prompt', triggered: 189, prevented: 55, rate: 29.1 },
+      { type: 'Review Highlights', triggered: 112, prevented: 31, rate: 27.7 },
     ],
   },
 
@@ -622,6 +640,12 @@ const COMPANIES = {
       { channel: 'Mobile App', returns: 71, pct: 15, rate: 11.7 },
       { channel: 'In-Store', returns: 33, pct: 6, rate: 7.3 },
     ],
+    interventions: [
+      { type: 'Dimension Visualizer', triggered: 287, prevented: 103, rate: 35.9 },
+      { type: 'Room Fit Calculator', triggered: 213, prevented: 81, rate: 38.0 },
+      { type: 'Material Swatch Modal', triggered: 164, prevented: 48, rate: 29.3 },
+      { type: 'Assembly Preview', triggered: 97, prevented: 29, rate: 29.9 },
+    ],
   },
 
   'peakfit': {
@@ -776,6 +800,12 @@ const COMPANIES = {
       { channel: 'Marketplace', returns: 126, pct: 24, rate: 13.2 },
       { channel: 'Mobile App', returns: 79, pct: 15, rate: 10.9 },
       { channel: 'In-Store', returns: 28, pct: 6, rate: 6.4 },
+    ],
+    interventions: [
+      { type: 'Size Guide Prompt', triggered: 378, prevented: 140, rate: 37.0 },
+      { type: 'Fit Confirmation', triggered: 256, prevented: 97, rate: 37.9 },
+      { type: 'Activity Match Quiz', triggered: 174, prevented: 58, rate: 33.3 },
+      { type: 'Review Highlights', triggered: 102, prevented: 28, rate: 27.5 },
     ],
   },
 };
