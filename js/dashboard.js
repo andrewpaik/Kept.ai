@@ -6,100 +6,105 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // ===== DATA =====
+  // ===== ACTIVE COMPANY STATE =====
 
-  // Daily data for last 7 days (Jan 25–31, 2026)
-  const data7D = [
-    { label: 'Jan 25', orders: 105, returns: 18, prevented: 12, returnRate: 17.1 },
-    { label: 'Jan 26', orders: 98,  returns: 16, prevented: 10, returnRate: 16.3 },
-    { label: 'Jan 27', orders: 122, returns: 22, prevented: 14, returnRate: 18.0 },
-    { label: 'Jan 28', orders: 134, returns: 24, prevented: 16, returnRate: 17.9 },
-    { label: 'Jan 29', orders: 118, returns: 20, prevented: 13, returnRate: 16.9 },
-    { label: 'Jan 30', orders: 141, returns: 25, prevented: 18, returnRate: 17.7 },
-    { label: 'Jan 31', orders: 128, returns: 21, prevented: 15, returnRate: 16.4 },
-  ];
+  let activeCompanyId = 'acme-apparel';
+  let datasets = COMPANIES[activeCompanyId].datasets;
+  let reasonsData = COMPANIES[activeCompanyId].reasonsData;
+  let aiInsights = COMPANIES[activeCompanyId].aiInsights;
+  let channelData = COMPANIES[activeCompanyId].channelData;
+  let avgOrderValue = COMPANIES[activeCompanyId].avgOrderValue;
+  let currentPeriod = '1Y';
 
-  // Daily data for last 30 days (Jan 2026)
-  const data30D = [
-    { label: 'Jan 1',  orders: 145, returns: 31, prevented: 14, returnRate: 21.4 },
-    { label: 'Jan 3',  orders: 132, returns: 27, prevented: 13, returnRate: 20.5 },
-    { label: 'Jan 5',  orders: 128, returns: 26, prevented: 14, returnRate: 20.3 },
-    { label: 'Jan 7',  orders: 119, returns: 24, prevented: 12, returnRate: 20.2 },
-    { label: 'Jan 9',  orders: 134, returns: 26, prevented: 15, returnRate: 19.4 },
-    { label: 'Jan 11', orders: 126, returns: 24, prevented: 14, returnRate: 19.0 },
-    { label: 'Jan 13', orders: 118, returns: 22, prevented: 13, returnRate: 18.6 },
-    { label: 'Jan 15', orders: 131, returns: 24, prevented: 15, returnRate: 18.3 },
-    { label: 'Jan 17', orders: 122, returns: 22, prevented: 14, returnRate: 18.0 },
-    { label: 'Jan 19', orders: 115, returns: 20, prevented: 13, returnRate: 17.4 },
-    { label: 'Jan 21', orders: 127, returns: 22, prevented: 14, returnRate: 17.3 },
-    { label: 'Jan 23', orders: 120, returns: 20, prevented: 13, returnRate: 16.7 },
-    { label: 'Jan 25', orders: 105, returns: 18, prevented: 12, returnRate: 17.1 },
-    { label: 'Jan 27', orders: 122, returns: 22, prevented: 14, returnRate: 18.0 },
-    { label: 'Jan 31', orders: 128, returns: 21, prevented: 15, returnRate: 16.4 },
-  ];
+  // ===== UTILITY =====
 
-  // Last 3 months (weekly, Nov 2025 – Jan 2026)
-  const data3M = [
-    { label: 'Nov W1', orders: 890, returns: 218, prevented: 42, returnRate: 24.5 },
-    { label: 'Nov W2', orders: 960, returns: 230, prevented: 48, returnRate: 24.0 },
-    { label: 'Nov W3', orders: 1020, returns: 240, prevented: 51, returnRate: 23.5 },
-    { label: 'Nov W4', orders: 970, returns: 234, prevented: 46, returnRate: 24.1 },
-    { label: 'Dec W1', orders: 1050, returns: 236, prevented: 68, returnRate: 22.5 },
-    { label: 'Dec W2', orders: 1080, returns: 232, prevented: 74, returnRate: 21.5 },
-    { label: 'Dec W3', orders: 1040, returns: 224, prevented: 78, returnRate: 21.5 },
-    { label: 'Dec W4', orders: 950, returns: 214, prevented: 74, returnRate: 22.5 },
-    { label: 'Jan W1', orders: 920, returns: 182, prevented: 82, returnRate: 19.8 },
-    { label: 'Jan W2', orders: 880, returns: 170, prevented: 80, returnRate: 19.3 },
-    { label: 'Jan W3', orders: 850, returns: 158, prevented: 78, returnRate: 18.6 },
-    { label: 'Jan W4', orders: 800, returns: 146, prevented: 78, returnRate: 18.3 },
-  ];
+  function fmt(n) {
+    return n.toLocaleString('en-US');
+  }
 
-  // Last 12 months (monthly, Feb 2025 – Jan 2026)
-  const data1Y = [
-    { label: 'Feb',  orders: 1980, returns: 495, prevented: 0,   returnRate: 25.0 },
-    { label: 'Mar',  orders: 2050, returns: 533, prevented: 0,   returnRate: 26.0 },
-    { label: 'Apr',  orders: 2120, returns: 551, prevented: 0,   returnRate: 26.0 },
-    { label: 'May',  orders: 2060, returns: 556, prevented: 0,   returnRate: 27.0 },
-    { label: 'Jun',  orders: 2180, returns: 589, prevented: 0,   returnRate: 27.0 },
-    { label: 'Jul',  orders: 2340, returns: 655, prevented: 0,   returnRate: 28.0 },
-    { label: 'Aug',  orders: 2890, returns: 838, prevented: 0,   returnRate: 29.0 },
-    { label: 'Sep',  orders: 3010, returns: 843, prevented: 42,  returnRate: 28.0, tag: 'Kept starts' },
-    { label: 'Oct',  orders: 3280, returns: 886, prevented: 108, returnRate: 27.0 },
-    { label: 'Nov',  orders: 3840, returns: 922, prevented: 187, returnRate: 24.0 },
-    { label: 'Dec',  orders: 4120, returns: 906, prevented: 294, returnRate: 22.0 },
-    { label: 'Jan',  orders: 3450, returns: 656, prevented: 318, returnRate: 19.0 },
-  ];
+  // Simple deterministic hash from a string
+  function strHash(s) {
+    let h = 0;
+    for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+    return Math.abs(h);
+  }
 
-  // All time (quarterly, Q1 2024 – Jan 2026)
-  const dataALL = [
-    { label: 'Q1 24', orders: 4200,  returns: 882,  prevented: 0,   returnRate: 21.0 },
-    { label: 'Q2 24', orders: 5100,  returns: 1122, prevented: 0,   returnRate: 22.0 },
-    { label: 'Q3 24', orders: 5800,  returns: 1334, prevented: 0,   returnRate: 23.0 },
-    { label: 'Q4 24', orders: 6200,  returns: 1488, prevented: 0,   returnRate: 24.0 },
-    { label: 'Q1 25', orders: 5900,  returns: 1475, prevented: 0,   returnRate: 25.0 },
-    { label: 'Q2 25', orders: 6360,  returns: 1654, prevented: 0,   returnRate: 26.0 },
-    { label: 'Q3 25', orders: 7420,  returns: 2082, prevented: 42,  returnRate: 28.0, tag: 'Kept starts' },
-    { label: 'Q4 25', orders: 11240, returns: 2714, prevented: 589, returnRate: 24.1 },
-    { label: 'Jan 26', orders: 3450, returns: 656,  prevented: 318, returnRate: 19.0 },
-  ];
+  // Generate period-specific reason splits from the base data
+  function varyReasons(baseReasons, periodData, periodKey) {
+    const totalReturns = periodData.reduce((s, d) => s + d.returns, 0);
+    const h = strHash(periodKey + activeCompanyId);
 
-  const datasets = {
-    '7D':  data7D,
-    '30D': data30D,
-    '3M':  data3M,
-    '1Y':  data1Y,
-    'ALL': dataALL,
-  };
+    // Apply small deterministic offsets to base percentages
+    const raw = baseReasons.map((r, i) => {
+      const offset = (((h * (i + 3) * 13) % 9) - 4) * 0.8;
+      return { ...r, rawPct: Math.max(2, r.pct + offset) };
+    });
 
-  // Return reasons data
-  const reasonsData = [
-    { name: 'Size / Fit Issues', pct: 40, count: 263, colorClass: 'reason__fill--navy' },
-    { name: 'Not as Described',  pct: 20, count: 131, colorClass: 'reason__fill--blue' },
-    { name: 'Quality Issues',    pct: 15, count: 98,  colorClass: 'reason__fill--muted' },
-    { name: 'Changed Mind',      pct: 12, count: 79,  colorClass: 'reason__fill--cyan' },
-    { name: 'Arrived Damaged',   pct: 7,  count: 46,  colorClass: 'reason__fill--gray' },
-    { name: 'Other',             pct: 6,  count: 40,  colorClass: 'reason__fill--lightgray' },
-  ];
+    // Normalize percentages to sum to 100
+    const rawSum = raw.reduce((s, r) => s + r.rawPct, 0);
+    raw.forEach(r => {
+      r.pct = Math.round((r.rawPct / rawSum) * 100);
+    });
+
+    // Fix rounding so pcts sum to exactly 100
+    const pctSum = raw.reduce((s, r) => s + r.pct, 0);
+    if (pctSum !== 100) raw[0].pct += 100 - pctSum;
+
+    // Distribute counts so they sum to exactly totalReturns
+    let assigned = 0;
+    raw.forEach((r, i) => {
+      if (i < raw.length - 1) {
+        r.count = Math.round(totalReturns * r.pct / 100);
+        assigned += r.count;
+      } else {
+        r.count = totalReturns - assigned;
+      }
+      delete r.rawPct;
+    });
+
+    return raw;
+  }
+
+  // Generate period-specific channel splits from the base data
+  function varyChannels(baseChannels, periodData, periodKey) {
+    const totalReturns = periodData.reduce((s, d) => s + d.returns, 0);
+    const h = strHash(periodKey + activeCompanyId);
+
+    // Apply small deterministic offsets
+    const raw = baseChannels.map((c, i) => {
+      const pctOff = (((h * (i + 7) * 11) % 7) - 3) * 0.6;
+      const rateOff = (((h * (i + 2) * 17) % 9) - 4) * 0.3;
+      return {
+        ...c,
+        rawPct: Math.max(2, c.pct + pctOff),
+        rate: Math.max(1, +(c.rate + rateOff).toFixed(1)),
+      };
+    });
+
+    // Normalize percentages to sum to 100
+    const rawSum = raw.reduce((s, c) => s + c.rawPct, 0);
+    raw.forEach(c => {
+      c.pct = Math.round((c.rawPct / rawSum) * 100);
+    });
+
+    // Fix rounding so pcts sum to exactly 100
+    const pctSum = raw.reduce((s, c) => s + c.pct, 0);
+    if (pctSum !== 100) raw[0].pct += 100 - pctSum;
+
+    // Distribute returns so they sum to exactly totalReturns
+    let assigned = 0;
+    raw.forEach((c, i) => {
+      if (i < raw.length - 1) {
+        c.returns = Math.round(totalReturns * c.pct / 100);
+        assigned += c.returns;
+      } else {
+        c.returns = totalReturns - assigned;
+      }
+      delete c.rawPct;
+    });
+
+    return raw;
+  }
 
   // ===== KPI RENDERING =====
 
@@ -108,8 +113,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const totalReturns = data.reduce((s, d) => s + d.returns, 0);
     const totalPrevented = data.reduce((s, d) => s + d.prevented, 0);
     const returnRate = totalOrders > 0 ? ((totalReturns / totalOrders) * 100) : 0;
-    const returnCost = Math.round(totalReturns * 60.2); // avg cost per return
-    const savedCost = Math.round(totalPrevented * 55.2);
+    // Industry data: processing costs 20-65% of item price (avg ~33%),
+    // only 40% of returned inventory resold at full value (~30% depreciation loss),
+    // plus reverse logistics at 15-30 cents per dollar (~21%)
+    // Total cost per return ≈ 66% of item value
+    const returnCost = Math.round(totalReturns * avgOrderValue * 0.66);
+
+    // Prevented return = retained revenue + avoided return costs
+    // 100% revenue retained + 33% processing avoided + 21% logistics avoided
+    const savedCost = Math.round(totalPrevented * avgOrderValue * 1.54);
 
     const kpiEls = document.querySelectorAll('.kpi-card__value');
     const deltaEls = document.querySelectorAll('.kpi-card__delta');
@@ -119,8 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (kpiEls[2]) kpiEls[2].textContent = returnRate.toFixed(1) + '%';
     if (kpiEls[3]) kpiEls[3].textContent = fmt(totalPrevented);
 
-    // Update deltas
-    const totalRevenue = Math.round(totalOrders * 121.4); // avg order value
+    const totalRevenue = Math.round(totalOrders * avgOrderValue);
     if (deltaEls[0]) deltaEls[0].textContent = '$' + fmt(totalRevenue) + ' revenue';
     if (deltaEls[1]) deltaEls[1].textContent = '$' + fmt(returnCost) + ' cost';
     if (deltaEls[2]) {
@@ -137,21 +148,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const chartBarsEl = document.getElementById('chart-bars');
   const chartYAxisEl = document.getElementById('chart-y-axis');
-  let currentPeriod = '1Y';
-
-  function fmt(n) {
-    return n.toLocaleString('en-US');
-  }
 
   function renderChart(data, animate) {
     if (!chartBarsEl || !chartYAxisEl) return;
 
     const maxOrders = Math.max(...data.map(d => d.orders));
-    const yMax = Math.ceil(maxOrders / 1000) * 1000;
+    // Pick a nice round ceiling based on magnitude
+    const magnitude = Math.pow(10, Math.floor(Math.log10(maxOrders || 1)));
+    const roundTo = magnitude >= 1000 ? 1000 : magnitude >= 100 ? 100 : magnitude >= 10 ? 10 : 5;
+    const yMax = Math.ceil(maxOrders / roundTo) * roundTo || roundTo;
     const ySteps = 5;
     const yStep = yMax / ySteps;
 
-    // Y axis
     chartYAxisEl.innerHTML = '';
     for (let i = ySteps; i >= 0; i--) {
       const span = document.createElement('span');
@@ -159,12 +167,12 @@ document.addEventListener('DOMContentLoaded', () => {
       chartYAxisEl.appendChild(span);
     }
 
-    // Bars
     chartBarsEl.innerHTML = '';
     data.forEach((d, idx) => {
       const ordersPct = (d.orders / yMax) * 100;
-      const returnsPct = (d.returns / yMax) * 100;
-      const preventedPct = (d.prevented / yMax) * 100;
+      // Returns and prevented are subsets of orders — size them relative to orders
+      const returnsPct = d.orders > 0 ? (d.returns / d.orders) * ordersPct : 0;
+      const preventedPct = d.orders > 0 ? (d.prevented / d.orders) * ordersPct : 0;
 
       const group = document.createElement('div');
       group.className = 'chart__bar-group';
@@ -198,11 +206,6 @@ document.addEventListener('DOMContentLoaded', () => {
       labelEl.textContent = d.label;
       group.appendChild(labelEl);
 
-      const rateEl = document.createElement('span');
-      rateEl.className = 'chart__bar-rate';
-      rateEl.textContent = d.returnRate.toFixed(1) + '%';
-      group.appendChild(rateEl);
-
       if (d.tag) {
         const tagEl = document.createElement('span');
         tagEl.className = 'chart__bar-tag';
@@ -212,7 +215,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
       chartBarsEl.appendChild(group);
 
-      // Animate in
       if (animate && !reducedMotion) {
         setTimeout(() => {
           barOrders.style.height = ordersPct + '%';
@@ -222,7 +224,91 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // Re-attach tooltips
+    // --- Return rate line overlay ---
+    const maxRate = Math.max(...data.map(d => d.returnRate));
+    const rateYMax = Math.ceil(maxRate / 5) * 5 + 5;
+
+    const oldOverlay = chartBarsEl.querySelector('.chart__rate-overlay');
+    if (oldOverlay) oldOverlay.remove();
+
+    const svgNS = 'http://www.w3.org/2000/svg';
+    const overlaySvg = document.createElementNS(svgNS, 'svg');
+    overlaySvg.setAttribute('class', 'chart__rate-overlay');
+    overlaySvg.setAttribute('preserveAspectRatio', 'none');
+    chartBarsEl.appendChild(overlaySvg);
+
+    requestAnimationFrame(() => {
+      const barsRect = chartBarsEl.getBoundingClientRect();
+      const chartH = barsRect.height - 40;
+      const chartW = barsRect.width;
+      const groups = chartBarsEl.querySelectorAll('.chart__bar-group');
+      const lineColor = getComputedStyle(document.documentElement).getPropertyValue('--text').trim() || '#0F172A';
+
+      overlaySvg.setAttribute('viewBox', `0 0 ${chartW} ${barsRect.height}`);
+      overlaySvg.setAttribute('width', chartW);
+      overlaySvg.setAttribute('height', barsRect.height);
+
+      const points = [];
+      groups.forEach((g, i) => {
+        const gRect = g.getBoundingClientRect();
+        const x = gRect.left - barsRect.left + gRect.width / 2;
+        const y = chartH - (data[i].returnRate / rateYMax) * chartH;
+        points.push({ x, y, rate: data[i].returnRate });
+      });
+
+      if (points.length > 1) {
+        const polyline = document.createElementNS(svgNS, 'polyline');
+        const pointsStr = points.map(p => `${p.x},${p.y}`).join(' ');
+        polyline.setAttribute('points', pointsStr);
+        polyline.setAttribute('fill', 'none');
+        polyline.setAttribute('stroke', lineColor);
+        polyline.setAttribute('stroke-width', '2');
+        polyline.setAttribute('stroke-linejoin', 'round');
+        polyline.setAttribute('stroke-linecap', 'round');
+
+        if (animate && !reducedMotion) {
+          polyline.style.opacity = '0';
+          setTimeout(() => { polyline.style.opacity = '1'; }, 300);
+        }
+
+        overlaySvg.appendChild(polyline);
+      }
+
+      points.forEach((p, i) => {
+        const circle = document.createElementNS(svgNS, 'circle');
+        circle.setAttribute('cx', p.x);
+        circle.setAttribute('cy', p.y);
+        circle.setAttribute('r', '4');
+        circle.setAttribute('fill', lineColor);
+        circle.setAttribute('stroke', '#fff');
+        circle.setAttribute('stroke-width', '2');
+
+        const text = document.createElementNS(svgNS, 'text');
+        text.setAttribute('x', p.x);
+        text.setAttribute('y', p.y - 12);
+        text.setAttribute('text-anchor', 'middle');
+        text.setAttribute('font-size', '11');
+        text.setAttribute('font-weight', '700');
+        text.setAttribute('fill', lineColor);
+        text.setAttribute('font-family', 'DM Sans, sans-serif');
+        text.textContent = p.rate.toFixed(1) + '%';
+
+        if (animate && !reducedMotion) {
+          circle.style.opacity = '0';
+          text.style.opacity = '0';
+          circle.style.transition = 'opacity 0.3s ease';
+          text.style.transition = 'opacity 0.3s ease';
+          setTimeout(() => {
+            circle.style.opacity = '1';
+            text.style.opacity = '1';
+          }, i * 60 + 400);
+        }
+
+        overlaySvg.appendChild(circle);
+        overlaySvg.appendChild(text);
+      });
+    });
+
     attachTooltips();
   }
 
@@ -230,28 +316,513 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const reasonsEl = document.getElementById('reasons-container');
 
-  function renderReasons(animate) {
+  function renderReasons(animate, dataOverride) {
     if (!reasonsEl) return;
     reasonsEl.innerHTML = '';
+    const activeReasons = dataOverride || reasonsData;
 
-    reasonsData.forEach((r, i) => {
-      const div = document.createElement('div');
-      div.className = 'reason';
-      div.innerHTML = `
-        <div class="reason__header">
-          <span class="reason__name">${r.name}</span>
-          <span class="reason__pct">${r.pct}%</span>
-        </div>
-        <div class="reason__bar"><div class="reason__fill ${r.colorClass}" style="width: ${animate && !reducedMotion ? '0%' : r.pct + '%'}"></div></div>
-        <span class="reason__count">${r.count} returns</span>
-      `;
-      reasonsEl.appendChild(div);
+    // Remove old pie tooltips
+    document.querySelectorAll('.pie-tooltip').forEach(el => el.remove());
+
+    const pieWrap = document.createElement('div');
+    pieWrap.className = 'reasons__pie-wrap';
+
+    const size = 220;
+    const cx = size / 2;
+    const cy = size / 2;
+    const r = 90;
+
+    const svgNS = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(svgNS, 'svg');
+    svg.setAttribute('viewBox', `0 0 ${size} ${size}`);
+    svg.setAttribute('class', 'reasons__pie');
+
+    let cumulative = 0;
+    const totalPct = activeReasons.reduce((s, d) => s + d.pct, 0);
+
+    const slicePaths = [];
+
+    activeReasons.forEach((d, i) => {
+      const startAngle = (cumulative / totalPct) * 360 - 90;
+      const sliceAngle = (d.pct / totalPct) * 360;
+      cumulative += d.pct;
+      const endAngle = startAngle + sliceAngle;
+
+      const midAngle = startAngle + sliceAngle / 2;
+      const midRad = (midAngle * Math.PI) / 180;
+
+      const startRad = (startAngle * Math.PI) / 180;
+      const endRad = (endAngle * Math.PI) / 180;
+
+      const x1 = cx + r * Math.cos(startRad);
+      const y1 = cy + r * Math.sin(startRad);
+      const x2 = cx + r * Math.cos(endRad);
+      const y2 = cy + r * Math.sin(endRad);
+      const largeArc = sliceAngle > 180 ? 1 : 0;
+
+      const path = document.createElementNS(svgNS, 'path');
+      const pathD = `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z`;
+      path.setAttribute('d', pathD);
+      path.setAttribute('fill', d.color);
+      path.setAttribute('data-slice-index', i);
+      path.style.opacity = animate && !reducedMotion ? '0' : '1';
+      path.style.transition = 'opacity 0.4s ease-out, transform 0.2s ease, filter 0.2s ease';
+      path.style.transformOrigin = `${cx}px ${cy}px`;
+      path.style.cursor = 'pointer';
+
+      path._hoverTx = Math.cos(midRad) * 6;
+      path._hoverTy = Math.sin(midRad) * 6;
+
+      svg.appendChild(path);
+      slicePaths.push(path);
 
       if (animate && !reducedMotion) {
-        const fill = div.querySelector('.reason__fill');
-        setTimeout(() => { fill.style.width = r.pct + '%'; }, i * 100 + 200);
+        setTimeout(() => { path.style.opacity = '1'; }, i * 80 + 150);
       }
     });
+
+    const hole = document.createElementNS(svgNS, 'circle');
+    hole.setAttribute('cx', cx);
+    hole.setAttribute('cy', cy);
+    hole.setAttribute('r', 52);
+    const cardBg = getComputedStyle(document.documentElement).getPropertyValue('--bg-card').trim() || '#FFFFFF';
+    hole.setAttribute('fill', cardBg);
+    hole.style.pointerEvents = 'none';
+    svg.appendChild(hole);
+
+    const centerLabel = document.createElementNS(svgNS, 'text');
+    centerLabel.setAttribute('x', cx);
+    centerLabel.setAttribute('y', cy - 6);
+    centerLabel.setAttribute('text-anchor', 'middle');
+    centerLabel.setAttribute('font-size', '11');
+    const mutedColor = getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim() || '#8E96A6';
+    centerLabel.setAttribute('fill', mutedColor);
+    centerLabel.setAttribute('font-family', 'DM Sans, sans-serif');
+    centerLabel.setAttribute('font-weight', '600');
+    centerLabel.textContent = 'Total';
+    centerLabel.style.pointerEvents = 'none';
+    svg.appendChild(centerLabel);
+
+    const centerValue = document.createElementNS(svgNS, 'text');
+    centerValue.setAttribute('x', cx);
+    centerValue.setAttribute('y', cy + 14);
+    centerValue.setAttribute('text-anchor', 'middle');
+    centerValue.setAttribute('font-size', '20');
+    const textColor = getComputedStyle(document.documentElement).getPropertyValue('--text').trim() || '#0F172A';
+    centerValue.setAttribute('fill', textColor);
+    centerValue.setAttribute('font-family', 'DM Sans, sans-serif');
+    centerValue.setAttribute('font-weight', '800');
+    centerValue.textContent = activeReasons.reduce((s, d) => s + d.count, 0).toLocaleString('en-US');
+    centerValue.style.pointerEvents = 'none';
+    svg.appendChild(centerValue);
+
+    pieWrap.appendChild(svg);
+
+    const legend = document.createElement('div');
+    legend.className = 'reasons__legend';
+
+    activeReasons.forEach((r) => {
+      const item = document.createElement('div');
+      item.className = 'reasons__legend-item';
+      item.innerHTML = `
+        <span class="reasons__legend-dot" style="background:${r.color}"></span>
+        <span class="reasons__legend-name">${r.name}</span>
+        <span class="reasons__legend-pct">${r.pct}%</span>
+        <span class="reasons__legend-count">${r.count} returns</span>
+      `;
+      legend.appendChild(item);
+    });
+
+    reasonsEl.appendChild(pieWrap);
+    reasonsEl.appendChild(legend);
+
+    // --- Pie tooltip ---
+    const pieTooltip = document.createElement('div');
+    pieTooltip.className = 'pie-tooltip';
+    pieTooltip.style.display = 'none';
+    document.body.appendChild(pieTooltip);
+
+    const legendItems = legend.querySelectorAll('.reasons__legend-item');
+
+    function highlightSlice(index) {
+      slicePaths.forEach((p, j) => {
+        if (j === index) {
+          p.style.transform = `translate(${p._hoverTx}px, ${p._hoverTy}px)`;
+          p.style.filter = 'brightness(1.15)';
+        } else {
+          p.style.transform = 'translate(0,0)';
+          p.style.filter = 'brightness(0.7)';
+          p.style.opacity = '0.5';
+        }
+      });
+      legendItems.forEach((item, j) => {
+        item.style.opacity = j === index ? '1' : '0.35';
+      });
+    }
+
+    function resetSlices() {
+      slicePaths.forEach(p => {
+        p.style.transform = 'translate(0,0)';
+        p.style.filter = 'none';
+        p.style.opacity = '1';
+      });
+      legendItems.forEach(item => {
+        item.style.opacity = '1';
+      });
+      pieTooltip.style.display = 'none';
+    }
+
+    slicePaths.forEach((path, i) => {
+      path.addEventListener('mouseenter', () => {
+        highlightSlice(i);
+        const d = activeReasons[i];
+        pieTooltip.innerHTML = `
+          <span class="pie-tooltip__dot" style="background:${d.color}"></span>
+          <strong>${d.name}</strong>
+          <span class="pie-tooltip__pct">${d.pct}%</span>
+          <span class="pie-tooltip__count">${d.count} returns</span>
+        `;
+        pieTooltip.style.display = 'flex';
+      });
+
+      path.addEventListener('mousemove', (e) => {
+        pieTooltip.style.left = e.pageX + 14 + 'px';
+        pieTooltip.style.top = e.pageY - 14 + 'px';
+      });
+
+      path.addEventListener('mouseleave', resetSlices);
+    });
+
+    legendItems.forEach((item, i) => {
+      item.style.cursor = 'pointer';
+      item.style.transition = 'opacity 0.2s ease';
+      item.addEventListener('mouseenter', () => highlightSlice(i));
+      item.addEventListener('mouseleave', resetSlices);
+    });
+  }
+
+  // ===== SPARKLINE (Return Rate Trend) =====
+
+  const sparklineEl = document.getElementById('sparkline-container');
+
+  function renderSparkline(periodData, animate) {
+    if (!sparklineEl) return;
+    sparklineEl.innerHTML = '';
+
+    // Remove old sparkline tooltips
+    document.querySelectorAll('.spark-tooltip').forEach(el => el.remove());
+
+    const trendData = periodData.map(d => ({ label: d.label, rate: d.returnRate }));
+
+    const svgNS = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(svgNS, 'svg');
+    svg.setAttribute('preserveAspectRatio', 'none');
+    sparklineEl.appendChild(svg);
+
+    const sparkTooltip = document.createElement('div');
+    sparkTooltip.className = 'spark-tooltip';
+    sparkTooltip.style.display = 'none';
+    document.body.appendChild(sparkTooltip);
+
+    requestAnimationFrame(() => {
+      const rect = sparklineEl.getBoundingClientRect();
+      const w = rect.width;
+      const h = rect.height;
+      const padTop = 24;
+      const padBottom = 20;
+      const padX = 30;
+      const chartH = h - padTop - padBottom;
+      const chartW = w - padX * 2;
+
+      svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+      svg.setAttribute('width', w);
+      svg.setAttribute('height', h);
+
+      const rates = trendData.map(d => d.rate);
+      const minR = Math.floor(Math.min(...rates) / 2) * 2 - 2;
+      const maxR = Math.ceil(Math.max(...rates) / 2) * 2 + 2;
+      const rangeR = maxR - minR || 1;
+
+      const lineColor = getComputedStyle(document.documentElement).getPropertyValue('--cyan').trim() || '#2E9CDB';
+      const textColor = getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim() || '#8E96A6';
+      const greenColor = getComputedStyle(document.documentElement).getPropertyValue('--green').trim() || '#22A873';
+      const borderColor = getComputedStyle(document.documentElement).getPropertyValue('--border').trim() || '#E2E8F0';
+      const cardBg = getComputedStyle(document.documentElement).getPropertyValue('--bg-card').trim() || '#FFFFFF';
+
+      const points = trendData.map((d, i) => ({
+        x: padX + (i / (trendData.length - 1)) * chartW,
+        y: padTop + (1 - (d.rate - minR) / rangeR) * chartH,
+        rate: d.rate,
+        label: d.label,
+      }));
+
+      // Gradient fill under line
+      const defs = document.createElementNS(svgNS, 'defs');
+      const grad = document.createElementNS(svgNS, 'linearGradient');
+      grad.setAttribute('id', 'spark-grad');
+      grad.setAttribute('x1', '0'); grad.setAttribute('y1', '0');
+      grad.setAttribute('x2', '0'); grad.setAttribute('y2', '1');
+      const stop1 = document.createElementNS(svgNS, 'stop');
+      stop1.setAttribute('offset', '0%');
+      stop1.setAttribute('stop-color', lineColor);
+      stop1.setAttribute('stop-opacity', '0.25');
+      const stop2 = document.createElementNS(svgNS, 'stop');
+      stop2.setAttribute('offset', '100%');
+      stop2.setAttribute('stop-color', lineColor);
+      stop2.setAttribute('stop-opacity', '0.02');
+      grad.appendChild(stop1);
+      grad.appendChild(stop2);
+      defs.appendChild(grad);
+      svg.appendChild(defs);
+
+      // Area fill
+      const areaPath = document.createElementNS(svgNS, 'path');
+      const areaD = `M ${points[0].x} ${points[0].y} ` +
+        points.slice(1).map(p => `L ${p.x} ${p.y}`).join(' ') +
+        ` L ${points[points.length - 1].x} ${padTop + chartH} L ${points[0].x} ${padTop + chartH} Z`;
+      areaPath.setAttribute('d', areaD);
+      areaPath.setAttribute('fill', 'url(#spark-grad)');
+      svg.appendChild(areaPath);
+
+      // Line
+      const polyline = document.createElementNS(svgNS, 'polyline');
+      polyline.setAttribute('points', points.map(p => `${p.x},${p.y}`).join(' '));
+      polyline.setAttribute('fill', 'none');
+      polyline.setAttribute('stroke', lineColor);
+      polyline.setAttribute('stroke-width', '2.5');
+      polyline.setAttribute('stroke-linejoin', 'round');
+      polyline.setAttribute('stroke-linecap', 'round');
+      svg.appendChild(polyline);
+
+      // Hover crosshair line (hidden by default)
+      const hoverLine = document.createElementNS(svgNS, 'line');
+      hoverLine.setAttribute('y1', padTop);
+      hoverLine.setAttribute('y2', padTop + chartH);
+      hoverLine.setAttribute('stroke', borderColor);
+      hoverLine.setAttribute('stroke-width', '1');
+      hoverLine.setAttribute('stroke-dasharray', '4 3');
+      hoverLine.style.display = 'none';
+      svg.appendChild(hoverLine);
+
+      // Hover dot (hidden by default)
+      const hoverDot = document.createElementNS(svgNS, 'circle');
+      hoverDot.setAttribute('r', '6');
+      hoverDot.setAttribute('fill', lineColor);
+      hoverDot.setAttribute('stroke', cardBg);
+      hoverDot.setAttribute('stroke-width', '3');
+      hoverDot.style.display = 'none';
+      svg.appendChild(hoverDot);
+
+      // Static points and month labels
+      const staticCircles = [];
+      const staticLabels = [];
+
+      points.forEach((p, i) => {
+        const circle = document.createElementNS(svgNS, 'circle');
+        circle.setAttribute('cx', p.x);
+        circle.setAttribute('cy', p.y);
+        circle.setAttribute('r', '3.5');
+        circle.setAttribute('fill', i === points.length - 1 ? greenColor : lineColor);
+        circle.setAttribute('stroke', cardBg);
+        circle.setAttribute('stroke-width', '2');
+        svg.appendChild(circle);
+        staticCircles.push(circle);
+
+        const text = document.createElementNS(svgNS, 'text');
+        text.setAttribute('x', p.x);
+        text.setAttribute('y', p.y - 10);
+        text.setAttribute('text-anchor', 'middle');
+        text.setAttribute('font-size', '10');
+        text.setAttribute('font-weight', '700');
+        text.setAttribute('fill', i === points.length - 1 ? greenColor : textColor);
+        text.setAttribute('font-family', 'DM Sans, sans-serif');
+        text.textContent = p.rate.toFixed(1) + '%';
+        svg.appendChild(text);
+        staticLabels.push(text);
+
+        const monthLabel = document.createElementNS(svgNS, 'text');
+        monthLabel.setAttribute('x', p.x);
+        monthLabel.setAttribute('y', h - 4);
+        monthLabel.setAttribute('text-anchor', 'middle');
+        monthLabel.setAttribute('font-size', '10');
+        monthLabel.setAttribute('fill', textColor);
+        monthLabel.setAttribute('font-family', 'DM Sans, sans-serif');
+        monthLabel.textContent = p.label;
+        svg.appendChild(monthLabel);
+      });
+
+      // Delta badge
+      const first = rates[0];
+      const last = rates[rates.length - 1];
+      const diff = last - first;
+      const deltaText = document.createElementNS(svgNS, 'text');
+      deltaText.setAttribute('x', w - 8);
+      deltaText.setAttribute('y', 14);
+      deltaText.setAttribute('text-anchor', 'end');
+      deltaText.setAttribute('font-size', '11');
+      deltaText.setAttribute('font-weight', '700');
+      deltaText.setAttribute('fill', diff <= 0 ? greenColor : (getComputedStyle(document.documentElement).getPropertyValue('--red').trim() || '#E05252'));
+      deltaText.setAttribute('font-family', 'DM Sans, sans-serif');
+      deltaText.textContent = (diff > 0 ? '+' : '') + diff.toFixed(1) + 'pp';
+      svg.appendChild(deltaText);
+
+      // Invisible hover zones for each point
+      points.forEach((p, i) => {
+        const zone = document.createElementNS(svgNS, 'rect');
+        const zoneW = chartW / points.length;
+        zone.setAttribute('x', p.x - zoneW / 2);
+        zone.setAttribute('y', 0);
+        zone.setAttribute('width', zoneW);
+        zone.setAttribute('height', h);
+        zone.setAttribute('fill', 'transparent');
+        zone.style.cursor = 'pointer';
+
+        zone.addEventListener('mouseenter', () => {
+          // Show crosshair + enlarged dot
+          hoverLine.setAttribute('x1', p.x);
+          hoverLine.setAttribute('x2', p.x);
+          hoverLine.style.display = '';
+          hoverDot.setAttribute('cx', p.x);
+          hoverDot.setAttribute('cy', p.y);
+          hoverDot.setAttribute('fill', i === points.length - 1 ? greenColor : lineColor);
+          hoverDot.style.display = '';
+
+          // Dim other points
+          staticCircles.forEach((c, j) => { c.style.opacity = j === i ? '0' : '0.3'; });
+          staticLabels.forEach((t, j) => { t.style.opacity = j === i ? '1' : '0.3'; });
+
+          // Show tooltip
+          const prevRate = i > 0 ? points[i - 1].rate : null;
+          const changePp = prevRate !== null ? (p.rate - prevRate) : null;
+          sparkTooltip.innerHTML = `
+            <strong>${p.label}</strong>
+            <span class="spark-tooltip__rate">${p.rate.toFixed(1)}%</span>
+            ${changePp !== null ? `<span class="spark-tooltip__change" style="color: ${changePp <= 0 ? greenColor : 'var(--red, #E05252)'}">${changePp > 0 ? '+' : ''}${changePp.toFixed(1)}pp vs prev</span>` : ''}
+          `;
+          sparkTooltip.style.display = 'flex';
+        });
+
+        zone.addEventListener('mousemove', (e) => {
+          sparkTooltip.style.left = e.clientX + 12 + 'px';
+          sparkTooltip.style.top = e.clientY - 60 + 'px';
+        });
+
+        zone.addEventListener('mouseleave', () => {
+          hoverLine.style.display = 'none';
+          hoverDot.style.display = 'none';
+          staticCircles.forEach(c => { c.style.opacity = '1'; });
+          staticLabels.forEach(t => { t.style.opacity = '1'; });
+          sparkTooltip.style.display = 'none';
+        });
+
+        svg.appendChild(zone);
+      });
+
+      if (animate) {
+        svg.style.opacity = '0';
+        svg.style.transition = 'opacity 0.5s ease-out';
+        setTimeout(() => { svg.style.opacity = '1'; }, 100);
+      }
+    });
+  }
+
+  // ===== CHANNEL BREAKDOWN =====
+
+  const channelEl = document.getElementById('channel-container');
+  const channelColors = ['#2E9CDB', '#2E9CDB', '#5BB8E8', '#A0AEC0'];
+
+  function renderChannels(baseChannelData, periodData, periodKey, animate) {
+    if (!channelEl) return;
+    channelEl.innerHTML = '';
+
+    const cData = varyChannels(baseChannelData, periodData, periodKey);
+
+    const items = [];
+
+    cData.forEach((d, i) => {
+      const item = document.createElement('div');
+      item.className = 'channel-item';
+
+      const barWidth = d.pct;
+
+      item.innerHTML = `
+        <span class="channel-item__name">${d.channel}</span>
+        <div class="channel-item__bar-wrap">
+          <div class="channel-item__bar" style="width: ${animate ? 0 : barWidth}%; background: ${channelColors[i]}"></div>
+        </div>
+        <div class="channel-item__stats">
+          <span class="channel-item__share"><span class="channel-item__stat-label">Share</span>${d.pct}%</span>
+          <span class="channel-item__divider"></span>
+          <span class="channel-item__rate"><span class="channel-item__stat-label">Rate</span>${d.rate}%</span>
+        </div>
+      `;
+
+      channelEl.appendChild(item);
+      items.push(item);
+
+      if (animate) {
+        const bar = item.querySelector('.channel-item__bar');
+        setTimeout(() => { bar.style.width = barWidth + '%'; }, i * 80 + 100);
+      }
+
+      // Hover: highlight this row, dim others
+      item.addEventListener('mouseenter', () => {
+        items.forEach((el, j) => {
+          if (j === i) {
+            el.classList.add('channel-item--active');
+          } else {
+            el.classList.add('channel-item--dimmed');
+          }
+        });
+      });
+
+      item.addEventListener('mouseleave', () => {
+        items.forEach(el => {
+          el.classList.remove('channel-item--active', 'channel-item--dimmed');
+        });
+      });
+    });
+  }
+
+  // ===== PRODUCT TABLE RENDERING =====
+
+  function renderProductTable(products) {
+    const tbody = document.querySelector('.product-table tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    const badge = document.querySelector('.card__badge');
+    if (badge) badge.textContent = `${products.length} products flagged`;
+
+    products.forEach(p => {
+      const tr = document.createElement('tr');
+      tr.setAttribute('data-product', p.id);
+      tr.innerHTML = `
+        <td class="product-table__td">
+          <div>
+            <span class="product-table__name">${p.name}</span>
+            <span class="product-table__cat">${p.cat}</span>
+          </div>
+        </td>
+        <td class="product-table__td product-table__td--mono">${p.sku}</td>
+        <td class="product-table__td product-table__td--right">$${p.price}</td>
+        <td class="product-table__td product-table__td--right">${fmt(p.sold)}</td>
+        <td class="product-table__td product-table__td--right">${fmt(p.returned)}</td>
+        <td class="product-table__td product-table__td--right ${p.returnRate >= 33 ? 'product-table__td--red' : 'product-table__td--amber'}">${p.returnRate.toFixed(1)}%</td>
+        <td class="product-table__td">
+          <span class="product-table__reason">${p.topReason}</span>
+          <span class="product-table__reason-pct">${p.reasonPct}%</span>
+        </td>
+        <td class="product-table__td product-table__td--right product-table__td--bold">$${fmt(p.returnCost)}</td>
+        <td class="product-table__td"><span class="risk-badge risk-badge--${p.risk}">${p.risk.charAt(0).toUpperCase() + p.risk.slice(1)}</span></td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    // Re-attach insight click handlers
+    attachProductRowHandlers();
+    // Re-attach sort handlers
+    attachSortHandlers();
   }
 
   // ===== TOOLTIPS =====
@@ -262,15 +833,16 @@ document.addEventListener('DOMContentLoaded', () => {
   document.body.appendChild(tooltip);
 
   function attachTooltips() {
-    document.querySelectorAll('.chart__bar-group').forEach(group => {
+    const currentData = datasets[currentPeriod];
+    document.querySelectorAll('.chart__bar-group').forEach((group, idx) => {
       const bars = group.querySelectorAll('.chart__bar');
       const label = group.querySelector('.chart__bar-label')?.textContent || '';
+      const rate = currentData[idx] ? currentData[idx].returnRate.toFixed(1) + '%' : '';
 
       group.addEventListener('mouseenter', () => {
         const orders = bars[0]?.title || '';
         const returns = bars[1]?.title || '';
         const prevented = bars[2]?.title || '';
-        const rate = group.querySelector('.chart__bar-rate')?.textContent || '';
 
         tooltip.innerHTML = `
           <strong>${label}</strong>
@@ -305,14 +877,17 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.classList.add('period-btn--active');
       currentPeriod = period;
 
-      renderChart(datasets[period], true);
-      updateKPIs(datasets[period]);
+      const pd = datasets[period];
+      renderChart(pd, true);
+      updateKPIs(pd);
+      renderSparkline(pd, true);
+      renderReasons(true, varyReasons(reasonsData, pd, period));
+      renderChannels(channelData, pd, period, true);
     });
   });
 
   // ===== KPI COUNTER ANIMATION =====
 
-  const kpiValues = document.querySelectorAll('.kpi-card__value');
   const easeOutExpo = t => t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
   const duration = 1400;
 
@@ -345,21 +920,11 @@ document.addEventListener('DOMContentLoaded', () => {
     requestAnimationFrame(step);
   };
 
-  if (kpiValues.length) {
-    const kpiObs = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (!entry.isIntersecting) return;
-        animateCounter(entry.target);
-        kpiObs.unobserve(entry.target);
-      });
-    }, { threshold: 0.5 });
-    kpiValues.forEach(el => kpiObs.observe(el));
-  }
-
   // ===== SORTABLE TABLE =====
 
-  const table = document.querySelector('.product-table');
-  if (table) {
+  function attachSortHandlers() {
+    const table = document.querySelector('.product-table');
+    if (!table) return;
     const headers = table.querySelectorAll('.product-table__th');
     const tbody = table.querySelector('tbody');
 
@@ -374,18 +939,22 @@ document.addEventListener('DOMContentLoaded', () => {
       th.style.cursor = 'pointer';
       th.dataset.sortDir = 'none';
 
-      th.addEventListener('click', () => {
-        const rows = Array.from(tbody.querySelectorAll('tr'));
-        const currentDir = th.dataset.sortDir;
+      // Remove old listeners by cloning
+      const newTh = th.cloneNode(true);
+      th.parentNode.replaceChild(newTh, th);
+
+      newTh.addEventListener('click', () => {
+        const rows = Array.from(tbody.querySelectorAll('tr:not(.insight-row)'));
+        const currentDir = newTh.dataset.sortDir;
         const newDir = currentDir === 'asc' ? 'desc' : 'asc';
 
-        headers.forEach(h => {
+        document.querySelectorAll('.product-table__th').forEach(h => {
           h.dataset.sortDir = 'none';
           h.classList.remove('product-table__th--sorted-asc', 'product-table__th--sorted-desc');
         });
 
-        th.dataset.sortDir = newDir;
-        th.classList.add(`product-table__th--sorted-${newDir}`);
+        newTh.dataset.sortDir = newDir;
+        newTh.classList.add(`product-table__th--sorted-${newDir}`);
 
         rows.sort((a, b) => {
           const aVal = getCellValue(a, colIdx);
@@ -404,45 +973,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ===== AI INSIGHT PANELS =====
-
-  const aiInsights = {
-    'olb-2024': {
-      product: 'Oversized Linen Blazer — OLB-2024',
-      summary: '81% of returns cite "Wrong Size." Customer review analysis reveals the blazer runs 1.5 sizes larger than standard. The size chart references body measurements but doesn\'t account for the intentional oversized fit, causing customers to order their regular size and find it too large.',
-      actions: [
-        { priority: 'high', text: 'Update size chart to include "Oversized Fit" guidance — recommend sizing down 1–2 sizes. Add a visual fit comparison showing this blazer vs. a standard-fit blazer.', impact: 'Est. -18% return rate → saves ~$2,900/quarter' },
-        { priority: 'high', text: 'Add a checkout fit warning: "This blazer is designed for an oversized look. Most customers size down." triggered when cart size matches customer\'s usual size.', impact: 'Est. -12% return rate → saves ~$1,950/quarter' },
-        { priority: 'medium', text: 'Reshoot product images to show the blazer on models of varying body types with size labels visible. Current photos make the fit ambiguous.', impact: 'Est. -6% return rate → saves ~$975/quarter' },
-      ]
-    },
-    'hwj-1189': {
-      product: 'High-Rise Wide Leg Jean — HWJ-1189',
-      summary: '74% of returns cite "Wrong Size." Inseam length is the primary complaint — the product page lists a single inseam (32") but doesn\'t offer length options. Customers under 5\'6" consistently report the jeans are too long, and customers with curvier builds report the waist-to-hip ratio is off.',
-      actions: [
-        { priority: 'high', text: 'Introduce short (28"), regular (30"), and long (32") inseam options. This single change addresses the majority of fit-related returns.', impact: 'Est. -22% return rate → saves ~$4,850/quarter' },
-        { priority: 'high', text: 'Deploy the Kept checkout widget with height-based inseam recommendations. Prompt: "What\'s your height?" and auto-suggest the best inseam.', impact: 'Est. -10% return rate → saves ~$2,200/quarter' },
-        { priority: 'medium', text: 'Add waist-to-hip ratio guidance in the size chart. Current sizing only references waist — adding hip measurements will help curvier customers pick the right size.', impact: 'Est. -5% return rate → saves ~$1,100/quarter' },
-      ]
-    },
-    'mod-3302': {
-      product: 'Mesh Overlay Midi Dress — MOD-3302',
-      summary: '68% of returns cite "Didn\'t Match Photos." The studio lighting makes the mesh overlay appear sheer/ethereal, but in person the fabric is more opaque and structured. Color also appears lighter in photos than reality. Customers expect a flowy, semi-transparent look and receive a more structured garment.',
-      actions: [
-        { priority: 'high', text: 'Reshoot product photos in natural lighting and include close-up texture shots of the mesh overlay. Add a "What to Expect" section showing studio vs. natural light comparison.', impact: 'Est. -15% return rate → saves ~$2,240/quarter' },
-        { priority: 'medium', text: 'Add a 15-second video showing the dress in motion and in different lighting conditions. Customer data shows products with video have 23% fewer "not as described" returns.', impact: 'Est. -10% return rate → saves ~$1,490/quarter' },
-        { priority: 'low', text: 'Update the product description to explicitly describe the mesh as "structured overlay" rather than "delicate mesh" to set accurate expectations.', impact: 'Est. -4% return rate → saves ~$600/quarter' },
-      ]
-    },
-    'cps-0891': {
-      product: 'Chunky Platform Sneaker — CPS-0891',
-      summary: '72% of returns cite "Wrong Size." The platform sole adds 2 inches of height which affects the internal fit — the toe box runs narrow at the platform junction. International customers ordering EU sizes are also experiencing conversion mismatches with the current size chart.',
-      actions: [
-        { priority: 'high', text: 'Add "Runs narrow — we recommend ordering a half size up" as a prominent callout on the product page. Integrate this into the Kept checkout widget as an auto-suggestion.', impact: 'Est. -16% return rate → saves ~$2,760/quarter' },
-        { priority: 'high', text: 'Fix the EU/UK size conversion table — current mapping is off by 0.5 sizes for EU 38–42. This directly impacts 31% of international orders.', impact: 'Est. -8% return rate → saves ~$1,380/quarter' },
-        { priority: 'medium', text: 'Add foot width guidance (narrow/regular/wide) and recommend sizing up for wide feet. Include a printable foot measurement guide.', impact: 'Est. -5% return rate → saves ~$865/quarter' },
-      ]
-    }
-  };
 
   function createInsightPanel(productId) {
     const data = aiInsights[productId];
@@ -486,62 +1016,342 @@ document.addEventListener('DOMContentLoaded', () => {
     return panel;
   }
 
-  // Attach click handlers to product rows
-  const productRows = document.querySelectorAll('tr[data-product]');
   let activeInsightRow = null;
   let activeProductRow = null;
 
-  productRows.forEach(row => {
-    row.addEventListener('click', () => {
-      const productId = row.dataset.product;
+  function attachProductRowHandlers() {
+    activeInsightRow = null;
+    activeProductRow = null;
 
-      // If clicking the same row, close it
-      if (activeProductRow === row) {
+    document.querySelectorAll('tr[data-product]').forEach(row => {
+      row.addEventListener('click', () => {
+        const productId = row.dataset.product;
+
+        if (activeProductRow === row) {
+          if (activeInsightRow) {
+            const panel = activeInsightRow.querySelector('.insight-panel');
+            panel.classList.remove('is-open');
+            setTimeout(() => activeInsightRow.remove(), 400);
+            activeInsightRow = null;
+          }
+          row.classList.remove('is-active');
+          activeProductRow = null;
+          return;
+        }
+
         if (activeInsightRow) {
           const panel = activeInsightRow.querySelector('.insight-panel');
           panel.classList.remove('is-open');
-          setTimeout(() => activeInsightRow.remove(), 400);
-          activeInsightRow = null;
+          setTimeout(() => {
+            if (activeInsightRow && activeInsightRow.parentNode) {
+              activeInsightRow.remove();
+            }
+          }, 400);
         }
-        row.classList.remove('is-active');
-        activeProductRow = null;
+        if (activeProductRow) {
+          activeProductRow.classList.remove('is-active');
+        }
+
+        row.classList.add('is-active');
+        activeProductRow = row;
+
+        const insightRow = createInsightPanel(productId);
+        if (insightRow) {
+          row.after(insightRow);
+          activeInsightRow = insightRow;
+
+          const panel = insightRow.querySelector('.insight-panel');
+          panel.classList.remove('is-open');
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              panel.classList.add('is-open');
+            });
+          });
+        }
+      });
+    });
+  }
+
+  // ===== COMPANY SWITCHING =====
+
+  const profileToggle = document.getElementById('profile-toggle');
+  const profileDropdown = document.getElementById('profile-dropdown');
+  const companyListEl = document.getElementById('company-list');
+  const navStoreName = document.getElementById('nav-store-name');
+  const navAvatar = document.getElementById('nav-avatar');
+
+  function buildCompanyList() {
+    if (!companyListEl) return;
+    companyListEl.innerHTML = '';
+
+    Object.entries(COMPANIES).forEach(([id, co]) => {
+      const item = document.createElement('button');
+      item.className = 'profile-dropdown__company' + (id === activeCompanyId ? ' profile-dropdown__company--active' : '');
+      item.innerHTML = `
+        <span class="profile-dropdown__avatar">${co.initials}</span>
+        <div class="profile-dropdown__info">
+          <span class="profile-dropdown__name">${co.name}</span>
+          <span class="profile-dropdown__industry">${co.industry}</span>
+        </div>
+        ${id === activeCompanyId ? '<span class="profile-dropdown__check">&#x2713;</span>' : ''}
+      `;
+      item.addEventListener('click', () => switchCompany(id));
+      companyListEl.appendChild(item);
+    });
+  }
+
+  function switchCompany(companyId) {
+    if (companyId === activeCompanyId) {
+      profileDropdown.classList.remove('is-open');
+      return;
+    }
+
+    const co = COMPANIES[companyId];
+    if (!co) return;
+
+    activeCompanyId = companyId;
+    datasets = co.datasets;
+    reasonsData = co.reasonsData;
+    aiInsights = co.aiInsights;
+    channelData = co.channelData;
+    avgOrderValue = co.avgOrderValue;
+
+    // Update nav
+    navStoreName.textContent = co.name;
+    navAvatar.textContent = co.initials;
+
+    // Reset period to 1Y
+    currentPeriod = '1Y';
+    periodBtns.forEach(b => {
+      b.classList.toggle('period-btn--active', b.dataset.period === '1Y');
+    });
+
+    // Re-render everything
+    renderChart(datasets[currentPeriod], true);
+    updateKPIs(datasets[currentPeriod]);
+    renderReasons(true, varyReasons(reasonsData, datasets[currentPeriod], currentPeriod));
+    renderSparkline(datasets[currentPeriod], true);
+    renderChannels(channelData, datasets[currentPeriod], currentPeriod, true);
+    renderProductTable(co.products);
+
+    // Rebuild company list to update active state
+    buildCompanyList();
+
+    // Close dropdown
+    profileDropdown.classList.remove('is-open');
+  }
+
+  // Toggle dropdown
+  if (profileToggle && profileDropdown) {
+    profileToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      profileDropdown.classList.toggle('is-open');
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!profileDropdown.contains(e.target) && !profileToggle.contains(e.target)) {
+        profileDropdown.classList.remove('is-open');
+      }
+    });
+  }
+
+  // ===== IMPORT MODAL =====
+
+  const importBtn = document.getElementById('import-btn');
+  const importModal = document.getElementById('import-modal');
+  const importModalClose = document.getElementById('import-modal-close');
+  const importCancel = document.getElementById('import-cancel');
+  const importSubmit = document.getElementById('import-submit');
+  const importDropzone = document.getElementById('import-dropzone');
+  const importFileInput = document.getElementById('import-file');
+  const importFileList = document.getElementById('import-file-list');
+
+  let importedFiles = [];
+
+  function openImportModal() {
+    if (importModal) {
+      importModal.classList.add('is-open');
+      profileDropdown.classList.remove('is-open');
+    }
+  }
+
+  function closeImportModal() {
+    if (importModal) {
+      importModal.classList.remove('is-open');
+      importedFiles = [];
+      if (importFileList) importFileList.innerHTML = '';
+      if (importFileInput) importFileInput.value = '';
+      document.getElementById('import-company-name').value = '';
+      document.getElementById('import-industry').value = '';
+    }
+  }
+
+  function updateFileList() {
+    if (!importFileList) return;
+    importFileList.innerHTML = '';
+    importedFiles.forEach((f, i) => {
+      const item = document.createElement('div');
+      item.className = 'modal__file-item';
+      item.innerHTML = `
+        <span class="modal__file-name">${f.name}</span>
+        <span class="modal__file-size">${(f.size / 1024).toFixed(1)} KB</span>
+        <button class="modal__file-remove" data-index="${i}">&times;</button>
+      `;
+      item.querySelector('.modal__file-remove').addEventListener('click', () => {
+        importedFiles.splice(i, 1);
+        updateFileList();
+      });
+      importFileList.appendChild(item);
+    });
+  }
+
+  if (importBtn) importBtn.addEventListener('click', openImportModal);
+  if (importModalClose) importModalClose.addEventListener('click', closeImportModal);
+  if (importCancel) importCancel.addEventListener('click', closeImportModal);
+
+  if (importModal) {
+    importModal.addEventListener('click', (e) => {
+      if (e.target === importModal) closeImportModal();
+    });
+  }
+
+  if (importDropzone && importFileInput) {
+    importDropzone.addEventListener('click', () => importFileInput.click());
+
+    importDropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      importDropzone.classList.add('is-dragover');
+    });
+
+    importDropzone.addEventListener('dragleave', () => {
+      importDropzone.classList.remove('is-dragover');
+    });
+
+    importDropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      importDropzone.classList.remove('is-dragover');
+      const files = Array.from(e.dataTransfer.files);
+      importedFiles.push(...files);
+      updateFileList();
+    });
+
+    importFileInput.addEventListener('change', () => {
+      const files = Array.from(importFileInput.files);
+      importedFiles.push(...files);
+      updateFileList();
+    });
+  }
+
+  function showToast(html, duration) {
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.innerHTML = html;
+    document.body.appendChild(toast);
+    requestAnimationFrame(() => toast.classList.add('is-visible'));
+    setTimeout(() => {
+      toast.classList.remove('is-visible');
+      setTimeout(() => toast.remove(), 400);
+    }, duration || 5000);
+    return toast;
+  }
+
+  if (importSubmit) {
+    importSubmit.addEventListener('click', async () => {
+      const companyName = document.getElementById('import-company-name').value.trim();
+      const industry = document.getElementById('import-industry').value.trim();
+
+      // Validate
+      if (!companyName) {
+        document.getElementById('import-company-name').style.borderColor = '#E05252';
+        return;
+      }
+      if (importedFiles.length === 0) {
+        importDropzone.style.borderColor = '#E05252';
         return;
       }
 
-      // Close any existing panel
-      if (activeInsightRow) {
-        const panel = activeInsightRow.querySelector('.insight-panel');
-        panel.classList.remove('is-open');
-        setTimeout(() => {
-          if (activeInsightRow && activeInsightRow.parentNode) {
-            activeInsightRow.remove();
-          }
-        }, 400);
-      }
-      if (activeProductRow) {
-        activeProductRow.classList.remove('is-active');
-      }
+      // Reset validation styles
+      document.getElementById('import-company-name').style.borderColor = '';
+      importDropzone.style.borderColor = '';
 
-      // Open new panel
-      row.classList.add('is-active');
-      activeProductRow = row;
+      // Show processing state
+      importSubmit.textContent = 'Analyzing with AI...';
+      importSubmit.disabled = true;
+      importCancel.disabled = true;
 
-      const insightRow = createInsightPanel(productId);
-      if (insightRow) {
-        row.after(insightRow);
-        activeInsightRow = insightRow;
+      const processingToast = showToast(`
+        <span class="toast__icon">&#x1F9E0;</span>
+        <div>
+          <strong>AI Agent processing "${companyName}" data...</strong>
+          <br><span class="toast__sub">Interpreting files and generating dashboard. This may take 15-30 seconds.</span>
+          <div class="toast__progress"><div class="toast__progress-bar"></div></div>
+        </div>
+      `, 60000);
 
-        // Trigger animation
-        const panel = insightRow.querySelector('.insight-panel');
-        panel.classList.remove('is-open');
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            panel.classList.add('is-open');
-          });
+      try {
+        // Build FormData
+        const formData = new FormData();
+        formData.append('companyName', companyName);
+        formData.append('industry', industry || 'E-commerce');
+        importedFiles.forEach(f => formData.append('files', f));
+
+        // Send to backend
+        const response = await fetch('/api/process', {
+          method: 'POST',
+          body: formData
         });
+
+        const result = await response.json();
+
+        // Remove processing toast
+        processingToast.classList.remove('is-visible');
+        setTimeout(() => processingToast.remove(), 400);
+
+        if (!response.ok || !result.success) {
+          throw new Error(result.error || 'Processing failed');
+        }
+
+        const co = result.company;
+
+        // Generate a slug ID
+        const companyId = companyName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+
+        // Add to COMPANIES global
+        COMPANIES[companyId] = co;
+
+        // Close modal and switch to the new company
+        closeImportModal();
+        switchCompany(companyId);
+
+        showToast(`
+          <span class="toast__icon">&#x2705;</span>
+          <div>
+            <strong>${co.name}</strong> dashboard is ready!
+            <br><span class="toast__sub">AI agent analyzed your data and generated returns intelligence.</span>
+          </div>
+        `, 5000);
+
+      } catch (err) {
+        console.error('Import error:', err);
+
+        // Remove processing toast
+        processingToast.classList.remove('is-visible');
+        setTimeout(() => processingToast.remove(), 400);
+
+        showToast(`
+          <span class="toast__icon">&#x274C;</span>
+          <div>
+            <strong>Processing failed</strong>
+            <br><span class="toast__sub">${err.message}</span>
+          </div>
+        `, 6000);
+      } finally {
+        importSubmit.textContent = 'Import & Process';
+        importSubmit.disabled = false;
+        importCancel.disabled = false;
       }
     });
-  });
+  }
 
   // ===== FADE-IN ON SCROLL =====
 
@@ -568,9 +1378,58 @@ document.addEventListener('DOMContentLoaded', () => {
     fadeEls.forEach(el => fadeObs.observe(el));
   }
 
+  // ===== RESIZE HANDLER =====
+
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      renderChart(datasets[currentPeriod], false);
+      renderSparkline(datasets[currentPeriod], false);
+    }, 150);
+  });
+
+  // ===== THEME TOGGLE =====
+
+  const themeToggle = document.getElementById('theme-toggle');
+  const navLogoImg = document.querySelector('.nav__logo-img:not(.nav__logo-img--footer)');
+  const savedTheme = localStorage.getItem('kept-theme');
+
+  function updateNavLogo(dark) {
+    if (!navLogoImg) return;
+    navLogoImg.src = dark ? 'assets/kept-logo-white.png?v=4' : 'assets/kept-logo.png?v=4';
+  }
+
+  if (savedTheme === 'dark') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    updateNavLogo(true);
+  }
+
+  if (themeToggle) {
+    themeToggle.addEventListener('click', () => {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      if (isDark) {
+        document.documentElement.removeAttribute('data-theme');
+        localStorage.setItem('kept-theme', 'light');
+      } else {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        localStorage.setItem('kept-theme', 'dark');
+      }
+      updateNavLogo(!isDark);
+      // Re-render SVG elements so colors update
+      renderChart(datasets[currentPeriod], false);
+      renderReasons(false, varyReasons(reasonsData, datasets[currentPeriod], currentPeriod));
+      renderSparkline(datasets[currentPeriod], false);
+    });
+  }
+
   // ===== INITIAL RENDER =====
 
+  buildCompanyList();
   renderChart(datasets[currentPeriod], true);
   updateKPIs(datasets[currentPeriod]);
-  renderReasons(true);
+  renderReasons(true, varyReasons(reasonsData, datasets[currentPeriod], currentPeriod));
+  renderSparkline(datasets[currentPeriod], true);
+  renderChannels(channelData, datasets[currentPeriod], currentPeriod, true);
+  renderProductTable(COMPANIES[activeCompanyId].products);
 });

@@ -25,8 +25,25 @@
         <img src="assets/kept-logo.png?v=4" alt="Kept" class="nav__logo-img">
       </a>
       <div class="nav__right">
-        <span class="nav__store-name">Acme Apparel Co.</span>
-        <span class="nav__avatar">AC</span>
+        <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode">
+          <span class="theme-toggle__icon theme-toggle__icon--light">&#x2600;</span>
+          <span class="theme-toggle__icon theme-toggle__icon--dark">&#x263E;</span>
+          <span class="theme-toggle__slider"></span>
+        </button>
+        <button class="nav__profile" id="profile-toggle">
+          <span class="nav__store-name" id="nav-store-name">Acme Apparel Co.</span>
+          <span class="nav__avatar" id="nav-avatar">AC</span>
+          <span class="nav__chevron">&#x25BE;</span>
+        </button>
+        <div class="profile-dropdown" id="profile-dropdown">
+          <div class="profile-dropdown__header">Switch Company</div>
+          <div class="profile-dropdown__list" id="company-list"></div>
+          <div class="profile-dropdown__divider"></div>
+          <button class="profile-dropdown__import" id="import-btn">
+            <span class="profile-dropdown__import-icon">&#x2B06;</span>
+            Import Dataset
+          </button>
+        </div>
       </div>
     </nav>
   </header>
@@ -81,12 +98,30 @@
       </div>
     </div>
 
-    <!-- RETURN REASONS -->
-    <div class="card" data-dash-animate data-dash-animate-delay="250">
-      <div class="card__header">
-        <h3 class="card__title">Return Reasons</h3>
+    <div class="dash__row">
+      <!-- RETURN REASONS -->
+      <div class="card card--reasons" data-dash-animate data-dash-animate-delay="250">
+        <div class="card__header">
+          <h3 class="card__title">Return Reasons</h3>
+        </div>
+        <div class="reasons" id="reasons-container">
+        </div>
       </div>
-      <div class="reasons" id="reasons-container">
+
+      <!-- RIGHT COLUMN: TREND + CHANNEL -->
+      <div class="dash__row-right">
+        <div class="card card--mini" data-dash-animate data-dash-animate-delay="300">
+          <div class="card__header">
+            <h3 class="card__title">Return Rate Trend</h3>
+          </div>
+          <div class="sparkline-wrap" id="sparkline-container"></div>
+        </div>
+        <div class="card card--mini" data-dash-animate data-dash-animate-delay="350">
+          <div class="card__header">
+            <h3 class="card__title">Returns by Channel</h3>
+          </div>
+          <div class="channel-list" id="channel-container"></div>
+        </div>
       </div>
     </div>
 
@@ -114,7 +149,6 @@
           <tbody>
             <tr data-product="olb-2024">
               <td class="product-table__td">
-                <span class="product-table__emoji">&#x1F9E5;</span>
                 <div>
                   <span class="product-table__name">Oversized Linen Blazer</span>
                   <span class="product-table__cat">Outerwear</span>
@@ -134,7 +168,6 @@
             </tr>
             <tr data-product="hwj-1189">
               <td class="product-table__td">
-                <span class="product-table__emoji">&#x1F456;</span>
                 <div>
                   <span class="product-table__name">High-Rise Wide Leg Jean</span>
                   <span class="product-table__cat">Bottoms</span>
@@ -154,7 +187,6 @@
             </tr>
             <tr data-product="mod-3302">
               <td class="product-table__td">
-                <span class="product-table__emoji">&#x1F457;</span>
                 <div>
                   <span class="product-table__name">Mesh Overlay Midi Dress</span>
                   <span class="product-table__cat">Dresses</span>
@@ -174,7 +206,6 @@
             </tr>
             <tr data-product="cps-0891">
               <td class="product-table__td">
-                <span class="product-table__emoji">&#x1F45F;</span>
                 <div>
                   <span class="product-table__name">Chunky Platform Sneaker</span>
                   <span class="product-table__cat">Footwear</span>
@@ -199,6 +230,38 @@
 
   </main>
 
+  <!-- IMPORT MODAL -->
+  <div class="modal-overlay" id="import-modal">
+    <div class="modal">
+      <div class="modal__header">
+        <h3 class="modal__title">Import Company Dataset</h3>
+        <button class="modal__close" id="import-modal-close">&times;</button>
+      </div>
+      <div class="modal__body">
+        <div class="modal__field">
+          <label class="modal__label" for="import-company-name">Company Name</label>
+          <input type="text" class="modal__input" id="import-company-name" placeholder="e.g. Nova Streetwear">
+        </div>
+        <div class="modal__field">
+          <label class="modal__label" for="import-industry">Industry</label>
+          <input type="text" class="modal__input" id="import-industry" placeholder="e.g. Fashion & Apparel">
+        </div>
+        <div class="modal__dropzone" id="import-dropzone">
+          <span class="modal__dropzone-icon">&#x1F4C1;</span>
+          <span class="modal__dropzone-text">Drag & drop CSV or JSON files here</span>
+          <span class="modal__dropzone-sub">or click to browse</span>
+          <input type="file" class="modal__file-input" id="import-file" accept=".csv,.json,.tsv,.txt" multiple>
+        </div>
+        <div class="modal__file-list" id="import-file-list"></div>
+        <p class="modal__note">Files will be processed by the Kept AI analytics agent in real time. The agent interprets any data format (CSV, JSON, TSV) — identifying orders, returns, products, and reasons — then generates a full returns intelligence dashboard. Processing typically takes 15-30 seconds.</p>
+      </div>
+      <div class="modal__footer">
+        <button class="btn btn--outline btn--sm" id="import-cancel">Cancel</button>
+        <button class="btn btn--primary btn--sm" id="import-submit">Import & Process</button>
+      </div>
+    </div>
+  </div>
+
   <!-- FOOTER -->
   <footer class="footer">
     <div class="footer__container">
@@ -211,6 +274,7 @@
     </div>
   </footer>
 
+  <script src="js/companies.js"></script>
   <script src="js/dashboard.js"></script>
 </body>
 </html>

@@ -1,0 +1,141 @@
+order_id,date,product_name,sku,category,price,quantity,status,return_reason
+ORD-10001,2025-02-15,Oversized Cargo Pants,OCP-100,Bottoms,89,1,delivered,
+ORD-10002,2025-02-15,Vintage Graphic Tee,VGT-200,Tops,45,1,returned,Wrong Size
+ORD-10003,2025-02-16,Oversized Cargo Pants,OCP-100,Bottoms,89,1,returned,Wrong Size
+ORD-10004,2025-02-16,Cropped Puffer Jacket,CPJ-300,Outerwear,165,1,delivered,
+ORD-10005,2025-02-17,Vintage Graphic Tee,VGT-200,Tops,45,2,delivered,
+ORD-10006,2025-02-17,Platform Combat Boot,PCB-400,Footwear,142,1,returned,Not Comfortable
+ORD-10007,2025-02-18,Oversized Cargo Pants,OCP-100,Bottoms,89,1,returned,Too Long
+ORD-10008,2025-02-18,Mesh Layer Tank,MLT-500,Tops,38,1,delivered,
+ORD-10009,2025-02-19,Cropped Puffer Jacket,CPJ-300,Outerwear,165,1,returned,Not as Described
+ORD-10010,2025-02-19,Platform Combat Boot,PCB-400,Footwear,142,1,returned,Wrong Size
+ORD-10011,2025-02-20,Vintage Graphic Tee,VGT-200,Tops,45,1,delivered,
+ORD-10012,2025-02-20,Oversized Cargo Pants,OCP-100,Bottoms,89,1,delivered,
+ORD-10013,2025-02-21,Mesh Layer Tank,MLT-500,Tops,38,1,returned,Quality Issues
+ORD-10014,2025-02-22,Cropped Puffer Jacket,CPJ-300,Outerwear,165,1,delivered,
+ORD-10015,2025-02-22,Platform Combat Boot,PCB-400,Footwear,142,1,returned,Wrong Size
+ORD-10016,2025-03-01,Oversized Cargo Pants,OCP-100,Bottoms,89,2,returned,Wrong Size
+ORD-10017,2025-03-01,Vintage Graphic Tee,VGT-200,Tops,45,1,delivered,
+ORD-10018,2025-03-02,Cropped Puffer Jacket,CPJ-300,Outerwear,165,1,delivered,
+ORD-10019,2025-03-02,Mesh Layer Tank,MLT-500,Tops,38,1,delivered,
+ORD-10020,2025-03-03,Platform Combat Boot,PCB-400,Footwear,142,1,returned,Not Comfortable
+ORD-10021,2025-03-03,Oversized Cargo Pants,OCP-100,Bottoms,89,1,delivered,
+ORD-10022,2025-03-04,Vintage Graphic Tee,VGT-200,Tops,45,1,returned,Faded After Wash
+ORD-10023,2025-03-05,Cropped Puffer Jacket,CPJ-300,Outerwear,165,1,returned,Too Puffy
+ORD-10024,2025-03-05,Mesh Layer Tank,MLT-500,Tops,38,1,delivered,
+ORD-10025,2025-03-06,Platform Combat Boot,PCB-400,Footwear,142,1,delivered,
+ORD-10026,2025-03-07,Oversized Cargo Pants,OCP-100,Bottoms,89,1,returned,Wrong Size
+ORD-10027,2025-03-08,Vintage Graphic Tee,VGT-200,Tops,45,2,delivered,
+ORD-10028,2025-03-08,Cropped Puffer Jacket,CPJ-300,Outerwear,165,1,delivered,
+ORD-10029,2025-03-09,Platform Combat Boot,PCB-400,Footwear,142,1,returned,Wrong Size
+ORD-10030,2025-03-10,Mesh Layer Tank,MLT-500,Tops,38,1,returned,See Through
+ORD-10031,2025-03-15,Oversized Cargo Pants,OCP-100,Bottoms,89,1,delivered,
+ORD-10032,2025-03-15,Vintage Graphic Tee,VGT-200,Tops,45,1,delivered,
+ORD-10033,2025-03-16,Cropped Puffer Jacket,CPJ-300,Outerwear,165,1,returned,Not as Described
+ORD-10034,2025-03-17,Platform Combat Boot,PCB-400,Footwear,142,1,returned,Not Comfortable
+ORD-10035,2025-03-18,Mesh Layer Tank,MLT-500,Tops,38,1,delivered,
+ORD-10036,2025-03-20,Oversized Cargo Pants,OCP-100,Bottoms,89,1,returned,Too Long
+ORD-10037,2025-03-20,Vintage Graphic Tee,VGT-200,Tops,45,1,returned,Wrong Size
+ORD-10038,2025-04-01,Cropped Puffer Jacket,CPJ-300,Outerwear,165,2,delivered,
+ORD-10039,2025-04-02,Platform Combat Boot,PCB-400,Footwear,142,1,delivered,
+ORD-10040,2025-04-03,Oversized Cargo Pants,OCP-100,Bottoms,89,1,returned,Wrong Size
+ORD-10041,2025-04-04,Vintage Graphic Tee,VGT-200,Tops,45,1,delivered,
+ORD-10042,2025-04-05,Mesh Layer Tank,MLT-500,Tops,38,1,returned,Quality Issues
+ORD-10043,2025-04-06,Cropped Puffer Jacket,CPJ-300,Outerwear,165,1,returned,Zipper Broke
+ORD-10044,2025-04-07,Platform Combat Boot,PCB-400,Footwear,142,1,returned,Wrong Size
+ORD-10045,2025-04-08,Oversized Cargo Pants,OCP-100,Bottoms,89,2,delivered,
+ORD-10046,2025-04-10,Vintage Graphic Tee,VGT-200,Tops,45,1,delivered,
+ORD-10047,2025-04-12,Mesh Layer Tank,MLT-500,Tops,38,1,delivered,
+ORD-10048,2025-04-15,Cropped Puffer Jacket,CPJ-300,Outerwear,165,1,delivered,
+ORD-10049,2025-04-18,Platform Combat Boot,PCB-400,Footwear,142,1,returned,Not Comfortable
+ORD-10050,2025-04-20,Oversized Cargo Pants,OCP-100,Bottoms,89,1,returned,Wrong Size
+ORD-10051,2025-05-01,Vintage Graphic Tee,VGT-200,Tops,45,2,delivered,
+ORD-10052,2025-05-03,Cropped Puffer Jacket,CPJ-300,Outerwear,165,1,delivered,
+ORD-10053,2025-05-05,Platform Combat Boot,PCB-400,Footwear,142,1,returned,Wrong Size
+ORD-10054,2025-05-07,Oversized Cargo Pants,OCP-100,Bottoms,89,1,delivered,
+ORD-10055,2025-05-10,Mesh Layer Tank,MLT-500,Tops,38,1,returned,See Through
+ORD-10056,2025-05-12,Vintage Graphic Tee,VGT-200,Tops,45,1,returned,Shrunk After Wash
+ORD-10057,2025-05-15,Cropped Puffer Jacket,CPJ-300,Outerwear,165,1,returned,Not as Described
+ORD-10058,2025-05-18,Platform Combat Boot,PCB-400,Footwear,142,1,delivered,
+ORD-10059,2025-05-20,Oversized Cargo Pants,OCP-100,Bottoms,89,1,returned,Too Long
+ORD-10060,2025-05-22,Mesh Layer Tank,MLT-500,Tops,38,1,delivered,
+ORD-10061,2025-06-01,Vintage Graphic Tee,VGT-200,Tops,45,1,delivered,
+ORD-10062,2025-06-03,Cropped Puffer Jacket,CPJ-300,Outerwear,165,1,delivered,
+ORD-10063,2025-06-05,Platform Combat Boot,PCB-400,Footwear,142,1,returned,Wrong Size
+ORD-10064,2025-06-07,Oversized Cargo Pants,OCP-100,Bottoms,89,2,delivered,
+ORD-10065,2025-06-10,Mesh Layer Tank,MLT-500,Tops,38,1,returned,Quality Issues
+ORD-10066,2025-06-12,Vintage Graphic Tee,VGT-200,Tops,45,1,returned,Wrong Size
+ORD-10067,2025-06-15,Cropped Puffer Jacket,CPJ-300,Outerwear,165,1,returned,Too Puffy
+ORD-10068,2025-06-18,Platform Combat Boot,PCB-400,Footwear,142,1,delivered,
+ORD-10069,2025-06-20,Oversized Cargo Pants,OCP-100,Bottoms,89,1,returned,Wrong Size
+ORD-10070,2025-06-22,Mesh Layer Tank,MLT-500,Tops,38,1,delivered,
+ORD-10071,2025-07-01,Vintage Graphic Tee,VGT-200,Tops,45,2,returned,Faded After Wash
+ORD-10072,2025-07-03,Cropped Puffer Jacket,CPJ-300,Outerwear,165,1,delivered,
+ORD-10073,2025-07-05,Platform Combat Boot,PCB-400,Footwear,142,1,returned,Wrong Size
+ORD-10074,2025-07-07,Oversized Cargo Pants,OCP-100,Bottoms,89,1,delivered,
+ORD-10075,2025-07-10,Mesh Layer Tank,MLT-500,Tops,38,1,delivered,
+ORD-10076,2025-07-12,Vintage Graphic Tee,VGT-200,Tops,45,1,delivered,
+ORD-10077,2025-07-15,Cropped Puffer Jacket,CPJ-300,Outerwear,165,1,returned,Not as Described
+ORD-10078,2025-07-18,Platform Combat Boot,PCB-400,Footwear,142,1,returned,Not Comfortable
+ORD-10079,2025-07-20,Oversized Cargo Pants,OCP-100,Bottoms,89,1,returned,Wrong Size
+ORD-10080,2025-07-22,Mesh Layer Tank,MLT-500,Tops,38,1,returned,See Through
+ORD-10081,2025-08-01,Vintage Graphic Tee,VGT-200,Tops,45,1,delivered,
+ORD-10082,2025-08-03,Cropped Puffer Jacket,CPJ-300,Outerwear,165,2,delivered,
+ORD-10083,2025-08-05,Platform Combat Boot,PCB-400,Footwear,142,1,returned,Wrong Size
+ORD-10084,2025-08-07,Oversized Cargo Pants,OCP-100,Bottoms,89,1,delivered,
+ORD-10085,2025-08-10,Mesh Layer Tank,MLT-500,Tops,38,1,delivered,
+ORD-10086,2025-08-12,Vintage Graphic Tee,VGT-200,Tops,45,1,returned,Shrunk After Wash
+ORD-10087,2025-08-15,Cropped Puffer Jacket,CPJ-300,Outerwear,165,1,returned,Zipper Broke
+ORD-10088,2025-08-18,Platform Combat Boot,PCB-400,Footwear,142,1,delivered,
+ORD-10089,2025-08-20,Oversized Cargo Pants,OCP-100,Bottoms,89,1,returned,Too Long
+ORD-10090,2025-08-22,Mesh Layer Tank,MLT-500,Tops,38,1,returned,Quality Issues
+ORD-10091,2025-09-01,Vintage Graphic Tee,VGT-200,Tops,45,2,delivered,
+ORD-10092,2025-09-03,Cropped Puffer Jacket,CPJ-300,Outerwear,165,1,delivered,
+ORD-10093,2025-09-05,Platform Combat Boot,PCB-400,Footwear,142,1,returned,Wrong Size
+ORD-10094,2025-09-07,Oversized Cargo Pants,OCP-100,Bottoms,89,1,delivered,
+ORD-10095,2025-09-10,Mesh Layer Tank,MLT-500,Tops,38,1,delivered,
+ORD-10096,2025-09-12,Vintage Graphic Tee,VGT-200,Tops,45,1,returned,Wrong Size
+ORD-10097,2025-09-15,Cropped Puffer Jacket,CPJ-300,Outerwear,165,1,returned,Not as Described
+ORD-10098,2025-09-18,Platform Combat Boot,PCB-400,Footwear,142,1,delivered,
+ORD-10099,2025-09-20,Oversized Cargo Pants,OCP-100,Bottoms,89,1,returned,Wrong Size
+ORD-10100,2025-09-22,Mesh Layer Tank,MLT-500,Tops,38,1,delivered,
+ORD-10101,2025-10-01,Vintage Graphic Tee,VGT-200,Tops,45,1,delivered,
+ORD-10102,2025-10-03,Cropped Puffer Jacket,CPJ-300,Outerwear,165,1,delivered,
+ORD-10103,2025-10-05,Platform Combat Boot,PCB-400,Footwear,142,1,returned,Wrong Size
+ORD-10104,2025-10-07,Oversized Cargo Pants,OCP-100,Bottoms,89,2,delivered,
+ORD-10105,2025-10-10,Mesh Layer Tank,MLT-500,Tops,38,1,delivered,
+ORD-10106,2025-10-12,Vintage Graphic Tee,VGT-200,Tops,45,1,returned,Faded After Wash
+ORD-10107,2025-10-15,Cropped Puffer Jacket,CPJ-300,Outerwear,165,1,delivered,
+ORD-10108,2025-10-18,Platform Combat Boot,PCB-400,Footwear,142,1,delivered,
+ORD-10109,2025-10-20,Oversized Cargo Pants,OCP-100,Bottoms,89,1,returned,Wrong Size
+ORD-10110,2025-10-22,Mesh Layer Tank,MLT-500,Tops,38,1,returned,See Through
+ORD-10111,2025-11-01,Vintage Graphic Tee,VGT-200,Tops,45,2,delivered,
+ORD-10112,2025-11-03,Cropped Puffer Jacket,CPJ-300,Outerwear,165,1,delivered,
+ORD-10113,2025-11-05,Platform Combat Boot,PCB-400,Footwear,142,1,returned,Not Comfortable
+ORD-10114,2025-11-07,Oversized Cargo Pants,OCP-100,Bottoms,89,1,delivered,
+ORD-10115,2025-11-10,Mesh Layer Tank,MLT-500,Tops,38,1,delivered,
+ORD-10116,2025-11-12,Vintage Graphic Tee,VGT-200,Tops,45,1,delivered,
+ORD-10117,2025-11-15,Cropped Puffer Jacket,CPJ-300,Outerwear,165,1,returned,Not as Described
+ORD-10118,2025-11-18,Platform Combat Boot,PCB-400,Footwear,142,1,delivered,
+ORD-10119,2025-11-20,Oversized Cargo Pants,OCP-100,Bottoms,89,1,returned,Wrong Size
+ORD-10120,2025-11-22,Mesh Layer Tank,MLT-500,Tops,38,1,returned,Quality Issues
+ORD-10121,2025-12-01,Vintage Graphic Tee,VGT-200,Tops,45,3,delivered,
+ORD-10122,2025-12-03,Cropped Puffer Jacket,CPJ-300,Outerwear,165,2,delivered,
+ORD-10123,2025-12-05,Platform Combat Boot,PCB-400,Footwear,142,1,returned,Wrong Size
+ORD-10124,2025-12-07,Oversized Cargo Pants,OCP-100,Bottoms,89,2,delivered,
+ORD-10125,2025-12-10,Mesh Layer Tank,MLT-500,Tops,38,1,delivered,
+ORD-10126,2025-12-12,Vintage Graphic Tee,VGT-200,Tops,45,1,returned,Wrong Size
+ORD-10127,2025-12-15,Cropped Puffer Jacket,CPJ-300,Outerwear,165,1,delivered,
+ORD-10128,2025-12-18,Platform Combat Boot,PCB-400,Footwear,142,1,delivered,
+ORD-10129,2025-12-20,Oversized Cargo Pants,OCP-100,Bottoms,89,1,returned,Too Long
+ORD-10130,2025-12-22,Mesh Layer Tank,MLT-500,Tops,38,1,delivered,
+ORD-10131,2026-01-01,Vintage Graphic Tee,VGT-200,Tops,45,2,delivered,
+ORD-10132,2026-01-03,Cropped Puffer Jacket,CPJ-300,Outerwear,165,1,delivered,
+ORD-10133,2026-01-05,Platform Combat Boot,PCB-400,Footwear,142,1,returned,Wrong Size
+ORD-10134,2026-01-07,Oversized Cargo Pants,OCP-100,Bottoms,89,1,delivered,
+ORD-10135,2026-01-10,Mesh Layer Tank,MLT-500,Tops,38,1,delivered,
+ORD-10136,2026-01-12,Vintage Graphic Tee,VGT-200,Tops,45,1,delivered,
+ORD-10137,2026-01-15,Cropped Puffer Jacket,CPJ-300,Outerwear,165,1,returned,Too Puffy
+ORD-10138,2026-01-18,Platform Combat Boot,PCB-400,Footwear,142,1,delivered,
+ORD-10139,2026-01-20,Oversized Cargo Pants,OCP-100,Bottoms,89,1,returned,Wrong Size
+ORD-10140,2026-01-22,Mesh Layer Tank,MLT-500,Tops,38,1,delivered,
