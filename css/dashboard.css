@@ -51,6 +51,12 @@
   border-bottom-color: var(--border);
 }
 
+[data-theme="dark"] .nav__globe-icon circle:first-child,
+[data-theme="dark"] .nav__globe-icon ellipse,
+[data-theme="dark"] .nav__globe-icon path:last-of-type {
+  stroke: #e8ecf2;
+}
+
 [data-theme="dark"] .footer {
   background: #0B0F1A;
 }
@@ -194,6 +200,24 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
 .nav__logo {
   display: flex;
   align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.nav__globe-icon {
+  flex-shrink: 0;
+}
+
+.nav__logo-text {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+
+.nav__logo-text--footer {
+  color: #ffffff;
 }
 
 .nav__logo-img {
