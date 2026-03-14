@@ -3085,27 +3085,51 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
 
 /* --- Responsive: 768px --- */
 @media (max-width: 768px) {
-  .nav__container { padding: 0 2%; }
-  .dash { padding: 8px 2% 24px; }
-  .footer { padding: 20px 2%; }
+  .nav__container { padding: 0 12px; }
+  .nav__right { gap: 8px; }
+  .export-btn--nav { display: none; }
+  .nav__store-name { display: none; }
+  .nav__logo-text { font-size: 15px; }
+  .nav__globe-icon { width: 24px; height: 24px; }
 
-  .kpi-row { grid-template-columns: 1fr; }
+  .dash { padding: 8px 12px 24px; }
+  .footer { padding: 20px 12px; }
+
+  .kpi-row { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .kpi-card { padding: 12px; }
+  .kpi-card__value { font-size: 20px; }
+  .kpi-card__label { font-size: 10px; }
+  .kpi-card__delta { font-size: 10px; }
+
   .dash__header { flex-direction: column; align-items: flex-start; gap: 8px; }
-  .chart, .chart--full { height: 220px; }
+  .chart, .chart--full { height: 200px; }
   .card__header { flex-direction: column; align-items: flex-start; gap: 8px; }
   .card__header-right { flex-direction: column; align-items: flex-start; }
-  .card { padding: 12px; }
+  .card__header-right--full { flex-direction: column; align-items: flex-start; }
+  .card { padding: 12px; border-radius: 10px; }
 
   .dash__row { flex-direction: column; }
   .dash__row--three { grid-template-columns: 1fr; }
   .dash__row--two { grid-template-columns: 1fr; }
   .reasons { gap: 6px; }
+  .financial-content { gap: 16px; }
   .financial__row { grid-template-columns: 1fr; }
   .roi-content { grid-template-columns: 1fr; }
-  .segment-item { grid-template-columns: 100px 1fr 60px 50px; }
+  .segment-item { grid-template-columns: 80px 1fr 50px 40px; font-size: 12px; }
   .comparison-bars { height: 60px; }
   .projections-content { grid-template-columns: 1fr; }
-  .chart-controls { flex-wrap: wrap; }
+  .chart-controls { flex-wrap: wrap; gap: 6px; }
+  .period-selector { gap: 2px; }
+  .period-btn { padding: 4px 8px; font-size: 11px; }
 
-  .footer__left { gap: 16px; flex-direction: column; }
+  .product-table__th { font-size: 11px; padding: 8px 6px; }
+  .product-table__td { font-size: 12px; padding: 8px 6px; }
+
+  .intervention-row { font-size: 12px; }
+  .intervention-row__th { font-size: 11px; }
+
+  .modal { margin: 16px; max-height: calc(100vh - 32px); }
+
+  .footer__left { gap: 12px; flex-direction: column; align-items: center; }
+  .footer__copy { font-size: 12px; }
 }
