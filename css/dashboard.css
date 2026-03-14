@@ -2,45 +2,48 @@
 
 /* --- Variables --- */
 :root {
-  --bg: #F8F9FB;
+  --bg: #f5f7fa;
   --bg-card: #FFFFFF;
-  --text: #0F172A;
-  --text-body: #475569;
-  --text-muted: #8E96A6;
-  --accent: #073159;
-  --accent-hover: #052545;
-  --cyan: #2E9CDB;
-  --border: #E2E8F0;
-  --green: #22A873;
-  --green-bg: #EEFBF5;
-  --red: #E05252;
-  --red-bg: #FEF2F2;
-  --amber: #D4930D;
-  --amber-bg: #FFF9EB;
-  --navy: #0F1A2E;
-  --navy-muted: #3B4A6B;
-  --font: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --text: #1b2a4a;
+  --text-body: #5a6d8a;
+  --text-muted: #7a8ba8;
+  --accent: #1b2a4a;
+  --accent-hover: #0f1d36;
+  --cyan: #00cfff;
+  --border: #e4e9f0;
+  --green: #00c853;
+  --green-bg: #edfcf3;
+  --red: #ff1744;
+  --red-bg: #fff1f3;
+  --amber: #ff6600;
+  --amber-bg: #fff5eb;
+  --navy: #1b2a4a;
+  --navy-muted: #4a6fa5;
+  --purple: #cc00ff;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: 'Outfit', 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
 }
 
 /* --- Dark Mode Variables --- */
 [data-theme="dark"] {
-  --bg: #0B0F1A;
-  --bg-card: #141926;
-  --text: #E2E8F0;
-  --text-body: #94A3B8;
-  --text-muted: #64748B;
-  --accent: #3B82F6;
-  --accent-hover: #2563EB;
-  --cyan: #38BDF8;
-  --border: #1E293B;
-  --green: #34D399;
-  --green-bg: #064E3B;
-  --red: #F87171;
-  --red-bg: #450A0A;
-  --amber: #FBBF24;
-  --amber-bg: #451A03;
-  --navy: #1E293B;
-  --navy-muted: #64748B;
+  --bg: #080c14;
+  --bg-card: #111827;
+  --text: #e8ecf2;
+  --text-body: #8a9ab8;
+  --text-muted: #5a6d8a;
+  --accent: #4a6fa5;
+  --accent-hover: #5a82be;
+  --cyan: #00cfff;
+  --border: #1c2640;
+  --green: #00c853;
+  --green-bg: #0a2618;
+  --red: #ff4466;
+  --red-bg: #2a0a10;
+  --amber: #ff8833;
+  --amber-bg: #2a1a0a;
+  --navy: #1c2640;
+  --navy-muted: #4a6fa5;
 }
 
 [data-theme="dark"] .nav {
@@ -347,6 +350,7 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
   display: block;
   font-size: 24px;
   font-weight: 800;
+  font-family: var(--font-display);
   color: var(--text);
   letter-spacing: -0.03em;
   line-height: 1.1;
@@ -383,6 +387,7 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
 .card__title {
   font-size: 13px;
   font-weight: 700;
+  font-family: var(--font-display);
   color: var(--text);
 }
 
@@ -847,7 +852,7 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
 }
 
 .product-table__td--mono {
-  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-family: var(--font-mono);
   font-size: 12px;
   color: var(--text-muted);
 }
@@ -976,7 +981,7 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
   font-size: 11px;
   font-weight: 700;
   color: var(--text);
-  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-family: var(--font-mono);
   text-align: right;
 }
 
@@ -1010,7 +1015,7 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
   font-weight: 700;
   color: var(--text);
   text-align: right;
-  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-family: var(--font-mono);
 }
 
 /* --- Footer --- */

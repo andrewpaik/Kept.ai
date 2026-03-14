@@ -678,9 +678,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const maxR = Math.ceil(Math.max(...rates) / 2) * 2 + 2;
       const rangeR = maxR - minR || 1;
 
-      const lineColor = getComputedStyle(document.documentElement).getPropertyValue('--cyan').trim() || '#2E9CDB';
+      const lineColor = getComputedStyle(document.documentElement).getPropertyValue('--cyan').trim() || '#00cfff';
       const textColor = getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim() || '#8E96A6';
-      const greenColor = getComputedStyle(document.documentElement).getPropertyValue('--green').trim() || '#22A873';
+      const greenColor = getComputedStyle(document.documentElement).getPropertyValue('--green').trim() || '#00c853';
       const borderColor = getComputedStyle(document.documentElement).getPropertyValue('--border').trim() || '#E2E8F0';
       const cardBg = getComputedStyle(document.documentElement).getPropertyValue('--bg-card').trim() || '#FFFFFF';
 
@@ -810,7 +810,7 @@ document.addEventListener('DOMContentLoaded', () => {
       deltaText.setAttribute('text-anchor', 'end');
       deltaText.setAttribute('font-size', '11');
       deltaText.setAttribute('font-weight', '700');
-      deltaText.setAttribute('fill', diff <= 0 ? greenColor : (getComputedStyle(document.documentElement).getPropertyValue('--red').trim() || '#E05252'));
+      deltaText.setAttribute('fill', diff <= 0 ? greenColor : (getComputedStyle(document.documentElement).getPropertyValue('--red').trim() || '#ff1744'));
       deltaText.setAttribute('font-family', 'DM Sans, sans-serif');
       deltaText.textContent = (diff > 0 ? '+' : '') + diff.toFixed(1) + 'pp';
       svg.appendChild(deltaText);
@@ -853,7 +853,7 @@ document.addEventListener('DOMContentLoaded', () => {
           sparkTooltip.innerHTML = `
             <strong>${p.label}</strong>
             <span class="spark-tooltip__rate">${p.rate.toFixed(1)}%</span>
-            ${changePp !== null ? `<span class="spark-tooltip__change" style="color: ${changePp <= 0 ? greenColor : 'var(--red, #E05252)'}">${changePp > 0 ? '+' : ''}${changePp.toFixed(1)}pp vs prev</span>` : ''}
+            ${changePp !== null ? `<span class="spark-tooltip__change" style="color: ${changePp <= 0 ? greenColor : 'var(--red, #ff1744)'}">${changePp > 0 ? '+' : ''}${changePp.toFixed(1)}pp vs prev</span>` : ''}
           `;
           sparkTooltip.style.display = 'flex';
         });
@@ -894,7 +894,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ===== CHANNEL BREAKDOWN =====
 
   const channelEl = document.getElementById('channel-container');
-  const channelColors = ['#2E9CDB', '#2E9CDB', '#5BB8E8', '#A0AEC0'];
+  const channelColors = ['#00cfff', '#00cfff', '#5BB8E8', '#A0AEC0'];
 
   function renderChannels(baseChannelData, periodData, periodKey, animate) {
     if (!channelEl) return;
@@ -1087,10 +1087,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // ===== FINANCIAL DRILL-DOWN =====
 
   const costBarColors = {
-    refundAmount: '#E05252',
-    returnShipping: '#D4930D',
+    refundAmount: '#ff1744',
+    returnShipping: '#ff6600',
     processingFees: '#3B4A6B',
-    handlingCost: '#2E9CDB',
+    handlingCost: '#00cfff',
     outboundShipping: '#A0AEC0',
   };
 
@@ -1166,7 +1166,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ===== CUSTOMER INTELLIGENCE =====
 
-  const segmentColors = ['#22A873', '#2E9CDB', '#D4930D', '#E05252'];
+  const segmentColors = ['#00c853', '#00cfff', '#ff6600', '#ff1744'];
 
   function renderCustomerIntelligence() {
     const segEl = document.getElementById('segments-container');
@@ -2218,11 +2218,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Validate
       if (!companyName) {
-        document.getElementById('import-company-name').style.borderColor = '#E05252';
+        document.getElementById('import-company-name').style.borderColor = '#ff1744';
         return;
       }
       if (importedFiles.length === 0) {
-        importDropzone.style.borderColor = '#E05252';
+        importDropzone.style.borderColor = '#ff1744';
         return;
       }
 
