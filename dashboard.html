@@ -25,6 +25,7 @@
         <img src="assets/kept-logo.png?v=4" alt="Kept" class="nav__logo-img">
       </a>
       <div class="nav__right">
+        <button class="export-btn export-btn--nav" id="export-dashboard-btn" title="Export full dashboard">&#x2B07; Export Dashboard</button>
         <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode">
           <span class="theme-toggle__icon theme-toggle__icon--light">&#x2600;</span>
           <span class="theme-toggle__icon theme-toggle__icon--dark">&#x263E;</span>
@@ -66,11 +67,22 @@
         <span class="kpi-card__label">Return Rate</span>
         <span class="kpi-card__value kpi-card__value--red">21.9%</span>
         <span class="kpi-card__delta kpi-card__delta--green">-8.0pp since Sep</span>
+        <span class="kpi-card__benchmark" id="kpi-benchmark">Industry avg: 20-30%</span>
       </div>
       <div class="kpi-card kpi-card--highlight">
         <span class="kpi-card__label">Returns Prevented</span>
         <span class="kpi-card__value kpi-card__value--green">949</span>
         <span class="kpi-card__delta kpi-card__delta--green">$52.4K saved</span>
+      </div>
+      <div class="kpi-card kpi-card--shock">
+        <span class="kpi-card__label">Total Return Cost</span>
+        <span class="kpi-card__value kpi-card__value--red" id="kpi-return-cost">$303,804</span>
+        <span class="kpi-card__delta kpi-card__delta--red" id="kpi-return-cost-delta">$55.20 avg per return</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-card__label">Exchange vs Refund</span>
+        <span class="kpi-card__value" id="kpi-exchange-pct">33.6%</span>
+        <span class="kpi-card__delta kpi-card__delta--green" id="kpi-exchange-delta">exchanges vs refunds</span>
       </div>
     </div>
 
@@ -82,13 +94,18 @@
             <span class="chart-legend__item"><span class="chart-legend__dot chart-legend__dot--orders"></span>Orders</span>
             <span class="chart-legend__item"><span class="chart-legend__dot chart-legend__dot--returns"></span>Returns</span>
             <span class="chart-legend__item"><span class="chart-legend__dot chart-legend__dot--prevented"></span>Prevented</span>
+            <span class="chart-legend__item chart-legend__item--prior" id="legend-prior" style="display:none"><span class="chart-legend__dot chart-legend__dot--prior"></span>Prior Period</span>
           </div>
-          <div class="period-selector">
-            <button class="period-btn" data-period="7D">7D</button>
-            <button class="period-btn" data-period="30D">30D</button>
-            <button class="period-btn" data-period="3M">3M</button>
-            <button class="period-btn period-btn--active" data-period="1Y">1Y</button>
-            <button class="period-btn" data-period="ALL">All</button>
+          <div class="chart-controls">
+            <button class="compare-toggle" id="compare-toggle" title="Compare with prior period">Compare</button>
+            <button class="export-btn export-btn--sm" id="export-chart-btn" title="Export chart data">&#x2B07; CSV</button>
+            <div class="period-selector">
+              <button class="period-btn" data-period="7D">7D</button>
+              <button class="period-btn" data-period="30D">30D</button>
+              <button class="period-btn" data-period="3M">3M</button>
+              <button class="period-btn period-btn--active" data-period="1Y">1Y</button>
+              <button class="period-btn" data-period="ALL">All</button>
+            </div>
           </div>
         </div>
       </div>
@@ -125,11 +142,23 @@
       </div>
     </div>
 
+    <!-- RETURN TIMING DISTRIBUTION -->
+    <div class="card card--timing" data-dash-animate data-dash-animate-delay="280">
+      <div class="card__header">
+        <h3 class="card__title">Return Timing Distribution</h3>
+      </div>
+      <div class="timing-chart" id="timing-chart-container"></div>
+      <div class="timing-insight" id="timing-insight"></div>
+    </div>
+
     <!-- PRODUCT TABLE -->
     <div class="card card--table" data-dash-animate data-dash-animate-delay="300">
       <div class="card__header">
         <h3 class="card__title">Highest-Risk Products</h3>
-        <span class="card__badge">4 products flagged</span>
+        <div class="card__header-actions">
+          <button class="export-btn export-btn--sm" id="export-products-btn" title="Export products">&#x2B07; CSV</button>
+          <span class="card__badge">4 products flagged</span>
+        </div>
       </div>
       <div class="table-wrap">
         <table class="product-table">
@@ -228,6 +257,88 @@
       </div>
     </div>
 
+    <!-- FINANCIAL DRILL-DOWN -->
+    <div class="card card--financial" data-dash-animate data-dash-animate-delay="350">
+      <div class="card__header">
+        <h3 class="card__title">Financial Drill-Down</h3>
+      </div>
+      <div class="financial-content">
+        <div class="financial__cost-bar">
+          <h4 class="financial__subtitle">Per-Return Cost Breakdown</h4>
+          <div class="cost-bar" id="cost-bar-container"></div>
+          <div class="cost-bar__legend" id="cost-bar-legend"></div>
+        </div>
+        <div class="financial__row">
+          <div class="financial__true-cost" id="true-cost-callout">
+            <span class="financial__true-cost-label">True Cost of a Return</span>
+            <span class="financial__true-cost-value">A <strong>$96</strong> average order return actually costs you <strong class="financial__true-cost-amount">$55.20</strong></span>
+          </div>
+          <div class="financial__credit-split">
+            <h4 class="financial__subtitle">Refund Method Split</h4>
+            <div class="credit-split-bars" id="credit-split-container"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CUSTOMER INTELLIGENCE -->
+    <div class="dash__row dash__row--two" data-dash-animate data-dash-animate-delay="400">
+      <div class="card card--segments">
+        <div class="card__header">
+          <h3 class="card__title">Customer Segmentation</h3>
+          <button class="export-btn export-btn--sm" id="export-segments-btn" title="Export segments">&#x2B07; CSV</button>
+        </div>
+        <div class="segments-list" id="segments-container"></div>
+        <div class="segments__comparison">
+          <h4 class="financial__subtitle">First-Time vs Repeat Return Rates</h4>
+          <div class="comparison-bars" id="comparison-bars-container"></div>
+        </div>
+      </div>
+      <div class="card card--geo">
+        <div class="card__header">
+          <h3 class="card__title">Geographic Return Patterns</h3>
+        </div>
+        <div class="geo-list" id="geo-container"></div>
+        <div class="bracketing-callout" id="bracketing-callout">
+          <div class="bracketing-callout__header">
+            <span class="bracketing-callout__icon">&#x26A0;</span>
+            <span class="bracketing-callout__title">Bracketing Detection</span>
+          </div>
+          <div class="bracketing-callout__stats" id="bracketing-stats"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DISPOSITION TRACKING -->
+    <div class="dash__row dash__row--three" data-dash-animate data-dash-animate-delay="350">
+      <div class="card card--disposition">
+        <div class="card__header">
+          <h3 class="card__title">Return Outcomes</h3>
+        </div>
+        <div class="disposition-chart" id="disposition-container"></div>
+      </div>
+      <div class="card card--recovery">
+        <div class="card__header">
+          <h3 class="card__title">Recovery Rate</h3>
+        </div>
+        <div class="recovery-content" id="recovery-container"></div>
+      </div>
+      <div class="card card--resolution">
+        <div class="card__header">
+          <h3 class="card__title">Avg Resolution Time</h3>
+        </div>
+        <div class="resolution-content" id="resolution-container"></div>
+      </div>
+    </div>
+
+    <!-- PREVENTION ANALYTICS (ROI) -->
+    <div class="card card--roi" data-dash-animate data-dash-animate-delay="380">
+      <div class="card__header">
+        <h3 class="card__title">Prevention Analytics</h3>
+      </div>
+      <div class="roi-content" id="roi-container"></div>
+    </div>
+
     <!-- INTERVENTION EFFECTIVENESS -->
     <div class="card card--interventions" data-dash-animate data-dash-animate-delay="400">
       <div class="card__header">
@@ -241,6 +352,46 @@
         <div class="intervention-row__th" style="text-align:right">Saved</div>
       </div>
       <div class="interventions-grid" id="interventions-container"></div>
+    </div>
+
+    <!-- MARGIN IMPACT + GOAL TRACKING (side by side) -->
+    <div class="dash__row dash__row--two" data-dash-animate data-dash-animate-delay="420">
+      <div class="card card--margin">
+        <div class="card__header">
+          <h3 class="card__title">Margin Impact</h3>
+        </div>
+        <div class="margin-content" id="margin-container"></div>
+      </div>
+      <div class="card card--goal">
+        <div class="card__header">
+          <h3 class="card__title">Goal Tracking</h3>
+        </div>
+        <div class="goal-content" id="goal-container"></div>
+      </div>
+    </div>
+
+    <!-- COHORT TRACKING + RETURN FUNNEL (side by side) -->
+    <div class="dash__row dash__row--two" data-dash-animate data-dash-animate-delay="440">
+      <div class="card card--cohort">
+        <div class="card__header">
+          <h3 class="card__title">Cohort Tracking</h3>
+        </div>
+        <div class="cohort-content" id="cohort-container"></div>
+      </div>
+      <div class="card card--funnel">
+        <div class="card__header">
+          <h3 class="card__title">Return Funnel</h3>
+        </div>
+        <div class="funnel-content" id="funnel-container"></div>
+      </div>
+    </div>
+
+    <!-- PROJECTED SAVINGS -->
+    <div class="card card--projections" data-dash-animate data-dash-animate-delay="460">
+      <div class="card__header">
+        <h3 class="card__title">Projected Savings</h3>
+      </div>
+      <div class="projections-content" id="projections-container"></div>
     </div>
 
   </main>

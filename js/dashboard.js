@@ -17,6 +17,29 @@ document.addEventListener('DOMContentLoaded', () => {
   let products = COMPANIES[activeCompanyId].products;
   let avgReturnCost = COMPANIES[activeCompanyId].avgReturnCost;
   let currentPeriod = '1Y';
+  let industryBenchmark = COMPANIES[activeCompanyId].industryBenchmark;
+  let keptSubscriptionCost = COMPANIES[activeCompanyId].keptSubscriptionCost;
+  let exchangeRefundSplit = COMPANIES[activeCompanyId].exchangeRefundSplit;
+  let costBreakdown = COMPANIES[activeCompanyId].costBreakdown;
+  let customerSegments = COMPANIES[activeCompanyId].customerSegments;
+  let firstTimeVsRepeat = COMPANIES[activeCompanyId].firstTimeVsRepeat;
+  let bracketingStats = COMPANIES[activeCompanyId].bracketingStats;
+  let geographicData = COMPANIES[activeCompanyId].geographicData;
+  let dispositionData = COMPANIES[activeCompanyId].dispositionData;
+  let recoveryRate = COMPANIES[activeCompanyId].recoveryRate;
+  let recoveryDollars = COMPANIES[activeCompanyId].recoveryDollars;
+  let avgResolutionDays = COMPANIES[activeCompanyId].avgResolutionDays;
+  let storeCreditSplit = COMPANIES[activeCompanyId].storeCreditSplit;
+  let returnRateAtKeptStart = COMPANIES[activeCompanyId].returnRateAtKeptStart;
+  let returnTimingData = COMPANIES[activeCompanyId].returnTimingData;
+  let returnTimingInsight = COMPANIES[activeCompanyId].returnTimingInsight;
+  let marginData = COMPANIES[activeCompanyId].marginData;
+  let cohortData = COMPANIES[activeCompanyId].cohortData;
+  let goalData = COMPANIES[activeCompanyId].goalData;
+  let returnFunnel = COMPANIES[activeCompanyId].returnFunnel;
+  let projectedSavings = COMPANIES[activeCompanyId].projectedSavings;
+  let annotations = COMPANIES[activeCompanyId].annotations;
+  let compareMode = false;
 
   // ===== UTILITY =====
 
@@ -163,6 +186,31 @@ document.addEventListener('DOMContentLoaded', () => {
     return raw;
   }
 
+  // ===== PRIOR PERIOD DATA (for Compare) =====
+
+  function getPriorPeriodData(period) {
+    // Derive prior period from the dataset hierarchy
+    const periodMap = {
+      '7D': '30D',   // prior 7 days from the 30-day data
+      '30D': '3M',   // prior 30 days from the 3-month data
+      '3M': '1Y',    // prior 3 months from the 1-year data
+      '1Y': 'ALL',   // prior year from the ALL data
+      'ALL': null,
+    };
+    const sourcePeriod = periodMap[period];
+    if (!sourcePeriod || !datasets[sourcePeriod]) return null;
+
+    const sourceData = datasets[sourcePeriod];
+    const currentData = datasets[period];
+    const len = currentData.length;
+
+    // Take the first N entries from the source (represents prior period)
+    if (sourceData.length >= len) {
+      return sourceData.slice(0, len);
+    }
+    return null;
+  }
+
   // ===== KPI RENDERING =====
 
   function updateKPIs(data) {
@@ -192,6 +240,28 @@ document.addEventListener('DOMContentLoaded', () => {
       deltaEls[2].className = 'kpi-card__delta ' + (diff <= 0 ? 'kpi-card__delta--green' : 'kpi-card__delta--red');
     }
     if (deltaEls[3]) deltaEls[3].textContent = '$' + fmt(savedCost) + ' saved';
+
+    // Update benchmark
+    const benchmarkEl = document.getElementById('kpi-benchmark');
+    if (benchmarkEl && industryBenchmark) {
+      benchmarkEl.textContent = `Industry avg: ${industryBenchmark.low}-${industryBenchmark.high}% (${industryBenchmark.label})`;
+    }
+
+    // Update Total Return Cost KPI
+    const returnCostEl = document.getElementById('kpi-return-cost');
+    const returnCostDeltaEl = document.getElementById('kpi-return-cost-delta');
+    if (returnCostEl) returnCostEl.textContent = '$' + fmt(returnCost);
+    if (returnCostDeltaEl) returnCostDeltaEl.textContent = '$' + avgReturnCost.toFixed(2) + ' avg per return';
+
+    // Update Exchange vs Refund KPI
+    const exchangePctEl = document.getElementById('kpi-exchange-pct');
+    const exchangeDeltaEl = document.getElementById('kpi-exchange-delta');
+    if (exchangePctEl && exchangeRefundSplit) {
+      exchangePctEl.textContent = exchangeRefundSplit.exchangePct.toFixed(1) + '%';
+    }
+    if (exchangeDeltaEl && exchangeRefundSplit) {
+      exchangeDeltaEl.textContent = fmt(exchangeRefundSplit.exchanges) + ' exchanges vs ' + fmt(exchangeRefundSplit.refunds) + ' refunds';
+    }
   }
 
   // ===== CHART RENDERING =====
@@ -273,6 +343,63 @@ document.addEventListener('DOMContentLoaded', () => {
         }, idx * 60 + 50);
       }
     });
+
+    // --- Compare mode: prior period overlay bars ---
+    if (compareMode) {
+      const priorData = getPriorPeriodData(currentPeriod);
+      if (priorData) {
+        const groups = chartBarsEl.querySelectorAll('.chart__bar-group');
+        const overlayCount = Math.min(priorData.length, groups.length);
+        for (let i = 0; i < overlayCount; i++) {
+          const stack = groups[i].querySelector('.chart__bar-stack');
+          if (!stack) continue;
+          const pd = priorData[i];
+          const priorOrdersPct = (pd.orders / yMax) * 100;
+          const priorReturnsPct = pd.orders > 0 ? (pd.returns / pd.orders) * priorOrdersPct : 0;
+
+          const priorBarOrders = document.createElement('div');
+          priorBarOrders.className = 'chart__bar chart__bar--prior-orders';
+          priorBarOrders.style.height = priorOrdersPct + '%';
+          priorBarOrders.title = 'Prior: ' + fmt(pd.orders) + ' orders';
+
+          const priorBarReturns = document.createElement('div');
+          priorBarReturns.className = 'chart__bar chart__bar--prior-returns';
+          priorBarReturns.style.height = priorReturnsPct + '%';
+          priorBarReturns.title = 'Prior: ' + fmt(pd.returns) + ' returns';
+
+          stack.appendChild(priorBarOrders);
+          stack.appendChild(priorBarReturns);
+        }
+      }
+    }
+
+    // --- Timeline annotations ---
+    if (annotations && annotations.length > 0) {
+      const groups = chartBarsEl.querySelectorAll('.chart__bar-group');
+      annotations.forEach(ann => {
+        // Find matching bar group by label
+        for (let i = 0; i < data.length; i++) {
+          if (data[i].label === ann.label) {
+            const group = groups[i];
+            if (!group) break;
+            const marker = document.createElement('div');
+            marker.className = 'chart__annotation';
+
+            const diamond = document.createElement('span');
+            diamond.className = 'chart__annotation-marker chart__annotation-marker--' + ann.type;
+            marker.appendChild(diamond);
+
+            const label = document.createElement('span');
+            label.className = 'chart__annotation-label';
+            label.textContent = ann.event;
+            marker.appendChild(label);
+
+            group.appendChild(marker);
+            break;
+          }
+        }
+      });
+    }
 
     // --- Return rate line overlay ---
     const maxRate = Math.max(...data.map(d => d.returnRate));
@@ -957,6 +1084,617 @@ document.addEventListener('DOMContentLoaded', () => {
     container.appendChild(totals);
   }
 
+  // ===== FINANCIAL DRILL-DOWN =====
+
+  const costBarColors = {
+    refundAmount: '#E05252',
+    returnShipping: '#D4930D',
+    processingFees: '#3B4A6B',
+    handlingCost: '#2E9CDB',
+    outboundShipping: '#A0AEC0',
+  };
+
+  const costBarLabels = {
+    refundAmount: 'Refund Amount',
+    returnShipping: 'Return Shipping',
+    processingFees: 'Processing Fees',
+    handlingCost: 'Handling Cost',
+    outboundShipping: 'Outbound Shipping',
+  };
+
+  function renderFinancialDrillDown() {
+    const barEl = document.getElementById('cost-bar-container');
+    const legendEl = document.getElementById('cost-bar-legend');
+    const trueCostEl = document.getElementById('true-cost-callout');
+    const creditEl = document.getElementById('credit-split-container');
+
+    if (barEl && costBreakdown) {
+      barEl.innerHTML = '';
+      const totalCost = avgReturnCost;
+      Object.entries(costBreakdown).forEach(([key, pct]) => {
+        const seg = document.createElement('div');
+        seg.className = 'cost-bar__segment';
+        seg.style.width = (pct * 100) + '%';
+        seg.style.background = costBarColors[key] || '#888';
+        const dollarVal = (totalCost * pct).toFixed(0);
+        seg.textContent = pct >= 0.08 ? '$' + dollarVal : '';
+        seg.title = costBarLabels[key] + ': $' + (totalCost * pct).toFixed(2) + ' (' + (pct * 100).toFixed(0) + '%)';
+        barEl.appendChild(seg);
+      });
+    }
+
+    if (legendEl && costBreakdown) {
+      legendEl.innerHTML = '';
+      Object.entries(costBreakdown).forEach(([key, pct]) => {
+        const item = document.createElement('span');
+        item.className = 'cost-bar__legend-item';
+        item.innerHTML = `
+          <span class="cost-bar__legend-dot" style="background:${costBarColors[key]}"></span>
+          ${costBarLabels[key]}
+          <span class="cost-bar__legend-value">$${(avgReturnCost * pct).toFixed(2)} (${(pct * 100).toFixed(0)}%)</span>
+        `;
+        legendEl.appendChild(item);
+      });
+    }
+
+    if (trueCostEl) {
+      trueCostEl.innerHTML = `
+        <span class="financial__true-cost-label">True Cost of a Return</span>
+        <span class="financial__true-cost-value">A <strong>$${avgOrderValue.toFixed(0)}</strong> average order return actually costs you <strong class="financial__true-cost-amount">$${avgReturnCost.toFixed(2)}</strong></span>
+      `;
+    }
+
+    if (creditEl && storeCreditSplit) {
+      creditEl.innerHTML = `
+        <div class="credit-split__item">
+          <span class="credit-split__label">Store Credit</span>
+          <div class="credit-split__bar-wrap">
+            <div class="credit-split__bar" style="width:${storeCreditSplit.storeCredit}%;background:var(--green)"></div>
+          </div>
+          <span class="credit-split__pct">${storeCreditSplit.storeCredit}%</span>
+        </div>
+        <div class="credit-split__item">
+          <span class="credit-split__label">Original Payment</span>
+          <div class="credit-split__bar-wrap">
+            <div class="credit-split__bar" style="width:${storeCreditSplit.originalPayment}%;background:var(--cyan)"></div>
+          </div>
+          <span class="credit-split__pct">${storeCreditSplit.originalPayment}%</span>
+        </div>
+      `;
+    }
+  }
+
+  // ===== CUSTOMER INTELLIGENCE =====
+
+  const segmentColors = ['#22A873', '#2E9CDB', '#D4930D', '#E05252'];
+
+  function renderCustomerIntelligence() {
+    const segEl = document.getElementById('segments-container');
+    const compEl = document.getElementById('comparison-bars-container');
+    const geoEl = document.getElementById('geo-container');
+    const bracketEl = document.getElementById('bracketing-stats');
+
+    if (segEl && customerSegments) {
+      segEl.innerHTML = '';
+      const maxCustomers = Math.max(...customerSegments.map(s => s.customers));
+      customerSegments.forEach((s, i) => {
+        const item = document.createElement('div');
+        item.className = 'segment-item';
+        const barPct = (s.customers / maxCustomers) * 100;
+        item.innerHTML = `
+          <span class="segment-item__name">${s.segment}</span>
+          <div class="segment-item__bar-wrap">
+            <div class="segment-item__bar" style="width:${barPct}%;background:${segmentColors[i]}"></div>
+          </div>
+          <span class="segment-item__customers">${fmt(s.customers)} cust</span>
+          <span class="segment-item__rate">${s.returnRate}%</span>
+        `;
+        segEl.appendChild(item);
+      });
+    }
+
+    if (compEl && firstTimeVsRepeat) {
+      compEl.innerHTML = '';
+      const maxRate = Math.max(firstTimeVsRepeat.firstTimeRate, firstTimeVsRepeat.repeatRate);
+      const ftHeight = (firstTimeVsRepeat.firstTimeRate / (maxRate * 1.2)) * 100;
+      const rpHeight = (firstTimeVsRepeat.repeatRate / (maxRate * 1.2)) * 100;
+      compEl.innerHTML = `
+        <div class="comparison-bar">
+          <span class="comparison-bar__value">${firstTimeVsRepeat.firstTimeRate}%</span>
+          <div class="comparison-bar__fill" style="height:${ftHeight}%;background:var(--red);opacity:0.7"></div>
+          <span class="comparison-bar__label">First-Time</span>
+        </div>
+        <div class="comparison-bar">
+          <span class="comparison-bar__value">${firstTimeVsRepeat.repeatRate}%</span>
+          <div class="comparison-bar__fill" style="height:${rpHeight}%;background:var(--cyan)"></div>
+          <span class="comparison-bar__label">Repeat</span>
+        </div>
+      `;
+    }
+
+    if (geoEl && geographicData) {
+      geoEl.innerHTML = '';
+      const maxGeoRate = Math.max(...geographicData.map(g => g.returnRate));
+      geographicData.forEach(g => {
+        const item = document.createElement('div');
+        item.className = 'geo-item';
+        const barPct = (g.returnRate / (maxGeoRate * 1.1)) * 100;
+        item.innerHTML = `
+          <span class="geo-item__region">${g.region}</span>
+          <div class="geo-item__bar-wrap">
+            <div class="geo-item__bar" style="width:${barPct}%"></div>
+          </div>
+          <span class="geo-item__rate">${g.returnRate}%</span>
+        `;
+        geoEl.appendChild(item);
+      });
+    }
+
+    if (bracketEl && bracketingStats) {
+      bracketEl.innerHTML = `
+        <div class="bracketing-stat">
+          <span class="bracketing-stat__value">${fmt(bracketingStats.flaggedCustomers)}</span>
+          <span class="bracketing-stat__label">Flagged Customers</span>
+        </div>
+        <div class="bracketing-stat">
+          <span class="bracketing-stat__value">${fmt(bracketingStats.ordersAffected)}</span>
+          <span class="bracketing-stat__label">Orders Affected</span>
+        </div>
+        <div class="bracketing-stat">
+          <span class="bracketing-stat__value">$${fmt(bracketingStats.costImpact)}</span>
+          <span class="bracketing-stat__label">Cost Impact</span>
+        </div>
+      `;
+    }
+  }
+
+  // ===== DISPOSITION TRACKING =====
+
+  function renderDisposition() {
+    const container = document.getElementById('disposition-container');
+    if (!container || !dispositionData) return;
+    container.innerHTML = '';
+
+    // Donut chart (same approach as reasons pie)
+    const pieWrap = document.createElement('div');
+    pieWrap.className = 'disposition__pie-wrap';
+
+    const size = 110;
+    const cx = size / 2;
+    const cy = size / 2;
+    const r = 45;
+    const hole = 28;
+
+    const svgNS = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(svgNS, 'svg');
+    svg.setAttribute('viewBox', `0 0 ${size} ${size}`);
+    svg.setAttribute('width', size);
+    svg.setAttribute('height', size);
+
+    let cumulative = 0;
+    const totalPct = dispositionData.reduce((s, d) => s + d.pct, 0);
+
+    dispositionData.forEach(d => {
+      const startAngle = (cumulative / totalPct) * 360 - 90;
+      const sliceAngle = (d.pct / totalPct) * 360;
+      cumulative += d.pct;
+      const endAngle = startAngle + sliceAngle;
+
+      const startRad = (startAngle * Math.PI) / 180;
+      const endRad = (endAngle * Math.PI) / 180;
+      const largeArc = sliceAngle > 180 ? 1 : 0;
+
+      const ox1 = cx + r * Math.cos(startRad);
+      const oy1 = cy + r * Math.sin(startRad);
+      const ox2 = cx + r * Math.cos(endRad);
+      const oy2 = cy + r * Math.sin(endRad);
+      const ix1 = cx + hole * Math.cos(endRad);
+      const iy1 = cy + hole * Math.sin(endRad);
+      const ix2 = cx + hole * Math.cos(startRad);
+      const iy2 = cy + hole * Math.sin(startRad);
+
+      const path = document.createElementNS(svgNS, 'path');
+      path.setAttribute('d', `M ${ox1} ${oy1} A ${r} ${r} 0 ${largeArc} 1 ${ox2} ${oy2} L ${ix1} ${iy1} A ${hole} ${hole} 0 ${largeArc} 0 ${ix2} ${iy2} Z`);
+      path.setAttribute('fill', d.color);
+      svg.appendChild(path);
+    });
+
+    pieWrap.appendChild(svg);
+
+    // List
+    const list = document.createElement('div');
+    list.className = 'disposition__list';
+    dispositionData.forEach(d => {
+      const row = document.createElement('div');
+      row.className = 'disposition__row';
+      row.innerHTML = `
+        <span class="disposition__dot" style="background:${d.color}"></span>
+        <span class="disposition__name">${d.type}</span>
+        <span class="disposition__pct">${d.pct}%</span>
+      `;
+      list.appendChild(row);
+    });
+
+    container.appendChild(pieWrap);
+    container.appendChild(list);
+  }
+
+  function renderRecovery() {
+    const container = document.getElementById('recovery-container');
+    if (!container) return;
+    container.innerHTML = `
+      <span class="recovery__value">${recoveryRate}%</span>
+      <span class="recovery__label">Value Recovered</span>
+      <span class="recovery__dollars"><strong>$${fmt(recoveryDollars.recovered)}</strong> of $${fmt(recoveryDollars.total)} total return value</span>
+    `;
+  }
+
+  function renderResolution() {
+    const container = document.getElementById('resolution-container');
+    if (!container) return;
+    const desc = avgResolutionDays <= 3 ? 'Fast turnaround' : avgResolutionDays <= 5 ? 'Standard processing' : avgResolutionDays <= 7 ? 'Extended handling' : 'Requires optimization';
+    container.innerHTML = `
+      <span class="resolution__value">${avgResolutionDays}<span class="resolution__unit"> days</span></span>
+      <span class="resolution__label">Avg Resolution</span>
+      <span class="resolution__desc">${desc}</span>
+    `;
+  }
+
+  // ===== PREVENTION ANALYTICS (ROI) =====
+
+  function renderPreventionAnalytics(data) {
+    const container = document.getElementById('roi-container');
+    if (!container) return;
+    container.innerHTML = '';
+
+    const totalPrevented = data.reduce((s, d) => s + d.prevented, 0);
+    const savedDollars = Math.round(totalPrevented * avgReturnCost);
+    const monthlySub = keptSubscriptionCost || 299;
+    // Use 1Y period data to compute approximate months
+    const roi = monthlySub > 0 ? (savedDollars / (monthlySub * 12)).toFixed(1) : '0';
+
+    const currentRate = data[data.length - 1]?.returnRate || 0;
+    const startRate = returnRateAtKeptStart || data[0]?.returnRate || 0;
+    const rateDelta = (currentRate - startRate).toFixed(1);
+
+    const maxBarRate = Math.max(startRate, currentRate, 1);
+
+    container.innerHTML = `
+      <div class="roi-card">
+        <span class="roi-card__label">Revenue Saved</span>
+        <span class="roi-card__value">$${fmt(savedDollars)}</span>
+        <span class="roi-card__sub"><strong>${roi}x ROI</strong> vs $${fmt(monthlySub)}/mo subscription</span>
+      </div>
+      <div class="roi-before-after">
+        <span class="roi-before-after__label">Return Rate: Before &rarr; After Kept</span>
+        <div class="roi-before-after__row">
+          <span class="roi-ba__marker">Start</span>
+          <div class="roi-ba__bar-wrap">
+            <div class="roi-ba__bar roi-ba__bar--before" style="width:${(startRate / (maxBarRate * 1.15)) * 100}%"></div>
+          </div>
+          <span class="roi-ba__value roi-ba__value--red">${startRate.toFixed(1)}%</span>
+        </div>
+        <div class="roi-before-after__row">
+          <span class="roi-ba__marker">Now</span>
+          <div class="roi-ba__bar-wrap">
+            <div class="roi-ba__bar roi-ba__bar--after" style="width:${(currentRate / (maxBarRate * 1.15)) * 100}%"></div>
+          </div>
+          <span class="roi-ba__value roi-ba__value--green">${currentRate.toFixed(1)}%</span>
+        </div>
+        <span class="roi-ba__delta">${rateDelta}pp reduction since Kept started</span>
+      </div>
+    `;
+  }
+
+  // ===== RETURN TIMING DISTRIBUTION =====
+
+  function renderReturnTiming(animate) {
+    const container = document.getElementById('timing-chart-container');
+    const insightEl = document.getElementById('timing-insight');
+    if (!container || !returnTimingData) return;
+    container.innerHTML = '';
+
+    const maxPct = Math.max(...returnTimingData.map(d => d.pct));
+
+    returnTimingData.forEach((d, i) => {
+      const group = document.createElement('div');
+      group.className = 'timing-bar-group';
+
+      const stack = document.createElement('div');
+      stack.className = 'timing-bar__stack';
+
+      const fill = document.createElement('div');
+      fill.className = 'timing-bar__fill';
+      const hPct = (d.pct / (maxPct * 1.15)) * 100;
+      fill.style.height = animate ? '0%' : hPct + '%';
+
+      const pctLabel = document.createElement('span');
+      pctLabel.className = 'timing-bar__pct';
+      pctLabel.textContent = d.pct + '%';
+
+      fill.appendChild(pctLabel);
+      stack.appendChild(fill);
+
+      const label = document.createElement('span');
+      label.className = 'timing-bar__label';
+      label.textContent = d.range;
+
+      group.appendChild(stack);
+      group.appendChild(label);
+
+      group.title = d.range + ': ' + fmt(d.count) + ' returns (' + d.pct + '%)';
+
+      container.appendChild(group);
+
+      if (animate) {
+        setTimeout(() => { fill.style.height = hPct + '%'; }, i * 80 + 50);
+      }
+    });
+
+    if (insightEl && returnTimingInsight) {
+      insightEl.textContent = returnTimingInsight;
+    }
+  }
+
+  // ===== MARGIN IMPACT =====
+
+  function renderMarginImpact() {
+    const container = document.getElementById('margin-container');
+    if (!container || !marginData) return;
+    container.innerHTML = '';
+
+    const maxPct = Math.max(marginData.grossMarginPct, 100);
+
+    container.innerHTML = `
+      <div class="margin-bars">
+        <div class="margin-bar-row">
+          <span class="margin-bar-row__label">Gross Margin</span>
+          <div class="margin-bar-row__bar-wrap">
+            <div class="margin-bar-row__bar margin-bar-row__bar--gross" style="width:${(marginData.grossMarginPct / maxPct) * 100}%"></div>
+          </div>
+          <span class="margin-bar-row__value" style="color:var(--green)">${marginData.grossMarginPct.toFixed(1)}%</span>
+        </div>
+        <div class="margin-bar-row">
+          <span class="margin-bar-row__label">After Returns</span>
+          <div class="margin-bar-row__bar-wrap">
+            <div class="margin-bar-row__bar margin-bar-row__bar--after" style="width:${(marginData.marginAfterReturns / maxPct) * 100}%"></div>
+            <div class="margin-bar-row__bar--gap" style="width:${((marginData.grossMarginPct - marginData.marginAfterReturns) / maxPct) * 100}%; left:${(marginData.marginAfterReturns / maxPct) * 100}%"></div>
+          </div>
+          <span class="margin-bar-row__value" style="color:var(--cyan)">${marginData.marginAfterReturns.toFixed(1)}%</span>
+        </div>
+      </div>
+      <div class="margin-callout">Returns are eroding ${marginData.marginImpactPp.toFixed(1)} pp of your margin</div>
+      <div class="margin-revenue">Revenue at risk: <strong>$${fmt(marginData.revenueAtRisk)}</strong></div>
+    `;
+  }
+
+  // ===== GOAL TRACKING =====
+
+  function renderGoalTracking() {
+    const container = document.getElementById('goal-container');
+    if (!container || !goalData) return;
+    container.innerHTML = '';
+
+    const totalRange = goalData.startRate - goalData.targetRate;
+    const progress = totalRange > 0 ? ((goalData.startRate - goalData.currentRate) / totalRange) * 100 : 0;
+    const clampedProgress = Math.max(0, Math.min(100, progress));
+
+    container.innerHTML = `
+      <div class="goal-progress">
+        <div class="goal-progress__bar-wrap">
+          <div class="goal-progress__bar" style="width:${clampedProgress}%"></div>
+        </div>
+        <div class="goal-labels">
+          <span>Start: ${goalData.startRate}%</span>
+          <span>Target: ${goalData.targetRate}% by ${goalData.targetDate}</span>
+        </div>
+      </div>
+      <div class="goal-status">
+        <span class="goal-status__indicator goal-status__indicator--${goalData.onTrack ? 'on-track' : 'off-track'}"></span>
+        <span style="color:var(--${goalData.onTrack ? 'green' : 'red'})">
+          ${goalData.onTrack ? 'On Track' : 'Off Track'}
+        </span>
+      </div>
+      <div class="goal-detail">
+        Currently at <strong>${goalData.currentRate}%</strong> (down from ${goalData.startRate}%).
+        ${clampedProgress.toFixed(0)}% of the way to your ${goalData.targetRate}% target.
+      </div>
+    `;
+  }
+
+  // ===== COHORT TRACKING =====
+
+  function renderCohortTracking() {
+    const container = document.getElementById('cohort-container');
+    if (!container || !cohortData) return;
+    container.innerHTML = '';
+
+    function cohortClass(rate) {
+      if (rate === null) return 'cohort-cell--null';
+      if (rate < 18) return 'cohort-cell--low';
+      if (rate < 25) return 'cohort-cell--med';
+      return 'cohort-cell--high';
+    }
+
+    let html = '<table class="cohort-table"><thead><tr>';
+    html += '<th>Cohort</th><th>Customers</th><th>30-Day</th><th>60-Day</th><th>90-Day</th>';
+    html += '</tr></thead><tbody>';
+
+    cohortData.forEach(c => {
+      html += '<tr>';
+      html += `<td>${c.cohort}</td>`;
+      html += `<td>${fmt(c.customers)}</td>`;
+      html += `<td class="${cohortClass(c.day30)}">${c.day30 !== null ? c.day30.toFixed(1) + '%' : '--'}</td>`;
+      html += `<td class="${cohortClass(c.day60)}">${c.day60 !== null ? c.day60.toFixed(1) + '%' : '--'}</td>`;
+      html += `<td class="${cohortClass(c.day90)}">${c.day90 !== null ? c.day90.toFixed(1) + '%' : '--'}</td>`;
+      html += '</tr>';
+    });
+
+    html += '</tbody></table>';
+    container.innerHTML = html;
+  }
+
+  // ===== RETURN FUNNEL =====
+
+  function renderReturnFunnel() {
+    const container = document.getElementById('funnel-container');
+    if (!container || !returnFunnel) return;
+    container.innerHTML = '';
+
+    const maxCount = Math.max(...returnFunnel.map(f => f.count));
+
+    returnFunnel.forEach((f, i) => {
+      const bar = document.createElement('div');
+      bar.className = 'funnel-bar';
+
+      const widthPct = (f.count / maxCount) * 100;
+      const isSmall = widthPct < 15;
+
+      bar.innerHTML = `
+        <span class="funnel-bar__label">${f.stage}</span>
+        <div class="funnel-bar__bar-wrap">
+          <div class="funnel-bar__bar" style="width:${widthPct}%;background:${f.color}">
+            ${!isSmall ? `<span class="funnel-bar__count">${fmt(f.count)}</span>` : ''}
+          </div>
+          ${isSmall ? `<span class="funnel-bar__count funnel-bar__count--outside">${fmt(f.count)}</span>` : ''}
+        </div>
+      `;
+
+      container.appendChild(bar);
+    });
+  }
+
+  // ===== PROJECTED SAVINGS =====
+
+  function renderProjectedSavings() {
+    const container = document.getElementById('projections-container');
+    if (!container || !projectedSavings) return;
+    container.innerHTML = '';
+
+    const cards = [
+      { label: 'Next 3 Months', value: projectedSavings.next3Months },
+      { label: 'Next 6 Months', value: projectedSavings.next6Months },
+      { label: 'Next 12 Months', value: projectedSavings.next12Months },
+    ];
+
+    cards.forEach(c => {
+      const card = document.createElement('div');
+      card.className = 'projection-card';
+      card.innerHTML = `
+        <span class="projection-card__label">${c.label}</span>
+        <span class="projection-card__value">$${fmt(c.value)}</span>
+      `;
+      container.appendChild(card);
+    });
+
+    const rateNote = document.createElement('div');
+    rateNote.className = 'projection-rate';
+    rateNote.textContent = 'Projected rate in 12 months: ' + projectedSavings.projectedRateIn12Mo + '%';
+    container.appendChild(rateNote);
+  }
+
+  // ===== EXPORT CSV =====
+
+  function downloadCSV(filename, csvContent) {
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function exportChartData() {
+    const data = datasets[currentPeriod];
+    let csv = 'Label,Orders,Returns,Prevented,Return Rate\n';
+    data.forEach(d => {
+      csv += `"${d.label}",${d.orders},${d.returns},${d.prevented},${d.returnRate}\n`;
+    });
+    downloadCSV('kept-chart-' + currentPeriod + '.csv', csv);
+  }
+
+  function exportProductData() {
+    const pd = datasets[currentPeriod];
+    const prods = varyProducts(products, pd, currentPeriod);
+    let csv = 'Product,SKU,Category,Price,Sold,Returned,Return Rate,Top Reason,Reason Pct,Return Cost,Risk\n';
+    prods.forEach(p => {
+      csv += `"${p.name}","${p.sku}","${p.cat}",${p.price},${p.sold},${p.returned},${p.returnRate}%,"${p.topReason}",${p.reasonPct}%,${p.returnCost},"${p.risk}"\n`;
+    });
+    downloadCSV('kept-products.csv', csv);
+  }
+
+  function exportSegmentsData() {
+    let csv = 'Segment,Customers,Return Rate,Net Value\n';
+    customerSegments.forEach(s => {
+      csv += `"${s.segment}",${s.customers},${s.returnRate}%,${s.netValue}\n`;
+    });
+    downloadCSV('kept-segments.csv', csv);
+  }
+
+  function exportDashboard() {
+    const data = datasets[currentPeriod];
+    const totalOrders = data.reduce((s, d) => s + d.orders, 0);
+    const totalReturns = data.reduce((s, d) => s + d.returns, 0);
+    const totalPrevented = data.reduce((s, d) => s + d.prevented, 0);
+    const returnRate = totalOrders > 0 ? ((totalReturns / totalOrders) * 100).toFixed(1) : 0;
+
+    let csv = 'Kept.ai Dashboard Export\n';
+    csv += `Company,${COMPANIES[activeCompanyId].name}\n`;
+    csv += `Period,${currentPeriod}\n`;
+    csv += `Export Date,${new Date().toISOString().split('T')[0]}\n\n`;
+
+    csv += 'KPI Summary\n';
+    csv += `Total Orders,${totalOrders}\n`;
+    csv += `Total Returns,${totalReturns}\n`;
+    csv += `Return Rate,${returnRate}%\n`;
+    csv += `Returns Prevented,${totalPrevented}\n`;
+    csv += `Savings,$${fmt(Math.round(totalPrevented * avgReturnCost))}\n\n`;
+
+    csv += 'Trend Data\nLabel,Orders,Returns,Prevented,Return Rate\n';
+    data.forEach(d => {
+      csv += `"${d.label}",${d.orders},${d.returns},${d.prevented},${d.returnRate}\n`;
+    });
+
+    csv += '\nProducts\nProduct,SKU,Price,Sold,Returned,Return Rate,Risk\n';
+    const prods = varyProducts(products, data, currentPeriod);
+    prods.forEach(p => {
+      csv += `"${p.name}","${p.sku}",${p.price},${p.sold},${p.returned},${p.returnRate}%,"${p.risk}"\n`;
+    });
+
+    csv += '\nCustomer Segments\nSegment,Customers,Return Rate,Net Value\n';
+    customerSegments.forEach(s => {
+      csv += `"${s.segment}",${s.customers},${s.returnRate}%,${s.netValue}\n`;
+    });
+
+    downloadCSV('kept-dashboard-export.csv', csv);
+  }
+
+  // Wire export buttons
+  const exportChartBtn = document.getElementById('export-chart-btn');
+  const exportProductsBtn = document.getElementById('export-products-btn');
+  const exportSegmentsBtn = document.getElementById('export-segments-btn');
+  const exportDashboardBtn = document.getElementById('export-dashboard-btn');
+
+  if (exportChartBtn) exportChartBtn.addEventListener('click', (e) => { e.stopPropagation(); exportChartData(); });
+  if (exportProductsBtn) exportProductsBtn.addEventListener('click', (e) => { e.stopPropagation(); exportProductData(); });
+  if (exportSegmentsBtn) exportSegmentsBtn.addEventListener('click', (e) => { e.stopPropagation(); exportSegmentsData(); });
+  if (exportDashboardBtn) exportDashboardBtn.addEventListener('click', (e) => { e.stopPropagation(); exportDashboard(); });
+
+  // ===== COMPARE TOGGLE =====
+
+  const compareToggleBtn = document.getElementById('compare-toggle');
+  const legendPrior = document.getElementById('legend-prior');
+
+  if (compareToggleBtn) {
+    compareToggleBtn.addEventListener('click', () => {
+      compareMode = !compareMode;
+      compareToggleBtn.classList.toggle('is-active', compareMode);
+      if (legendPrior) legendPrior.style.display = compareMode ? '' : 'none';
+      renderChart(datasets[currentPeriod], true);
+    });
+  }
+
   // ===== TOOLTIPS =====
 
   const tooltip = document.createElement('div');
@@ -1017,6 +1755,18 @@ document.addEventListener('DOMContentLoaded', () => {
       renderChannels(channelData, pd, period, true);
       renderProductTable(varyProducts(products, pd, period));
       renderInterventions(varyInterventions(interventions, period, pd), avgReturnCost);
+      renderFinancialDrillDown();
+      renderCustomerIntelligence();
+      renderDisposition();
+      renderRecovery();
+      renderResolution();
+      renderPreventionAnalytics(pd);
+      renderReturnTiming(true);
+      renderMarginImpact();
+      renderGoalTracking();
+      renderCohortTracking();
+      renderReturnFunnel();
+      renderProjectedSavings();
     });
   });
 
@@ -1108,9 +1858,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ===== AI INSIGHT PANELS =====
 
+  function buildVariantHeatmapHTML(productId) {
+    // Find the product with variant data
+    const product = products.find(p => p.id === productId);
+    if (!product || !product.variants) return '';
+
+    const v = product.variants;
+    function cellClass(rate) {
+      if (rate < 18) return 'variant-cell--low';
+      if (rate < 28) return 'variant-cell--med';
+      return 'variant-cell--high';
+    }
+
+    let html = '<div class="variant-heatmap">';
+    html += '<div class="variant-heatmap__title">Variant Return Rate Heatmap</div>';
+    html += '<table class="variant-table"><thead><tr><th></th>';
+    v.colors.forEach(c => { html += `<th>${c}</th>`; });
+    html += '</tr></thead><tbody>';
+
+    v.sizes.forEach((size, si) => {
+      html += `<tr><td>${size}</td>`;
+      v.colors.forEach((color, ci) => {
+        const rate = v.rates[si] ? v.rates[si][ci] : 0;
+        html += `<td class="${cellClass(rate)}">${rate}%</td>`;
+      });
+      html += '</tr>';
+    });
+
+    html += '</tbody></table></div>';
+    return html;
+  }
+
   function createInsightPanel(productId) {
     const data = aiInsights[productId];
     if (!data) return null;
+
+    const variantHTML = buildVariantHeatmapHTML(productId);
 
     const panel = document.createElement('tr');
     panel.className = 'insight-row';
@@ -1126,6 +1909,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <span class="insight-card__product">${data.product}</span>
             </div>
             <p class="insight-card__summary">${data.summary}</p>
+            ${variantHTML}
             <span class="insight-card__actions-title">Recommended Actions</span>
             <div class="insight-card__actions">
               ${data.actions.map(a => `
@@ -1252,6 +2036,28 @@ document.addEventListener('DOMContentLoaded', () => {
     products = co.products;
     avgReturnCost = co.avgReturnCost || 50;
     interventions = co.interventions || [];
+    industryBenchmark = co.industryBenchmark;
+    keptSubscriptionCost = co.keptSubscriptionCost;
+    exchangeRefundSplit = co.exchangeRefundSplit;
+    costBreakdown = co.costBreakdown;
+    customerSegments = co.customerSegments;
+    firstTimeVsRepeat = co.firstTimeVsRepeat;
+    bracketingStats = co.bracketingStats;
+    geographicData = co.geographicData;
+    dispositionData = co.dispositionData;
+    recoveryRate = co.recoveryRate;
+    recoveryDollars = co.recoveryDollars;
+    avgResolutionDays = co.avgResolutionDays;
+    storeCreditSplit = co.storeCreditSplit;
+    returnRateAtKeptStart = co.returnRateAtKeptStart;
+    returnTimingData = co.returnTimingData;
+    returnTimingInsight = co.returnTimingInsight;
+    marginData = co.marginData;
+    cohortData = co.cohortData;
+    goalData = co.goalData;
+    returnFunnel = co.returnFunnel;
+    projectedSavings = co.projectedSavings;
+    annotations = co.annotations;
 
     // Update nav
     navStoreName.textContent = co.name;
@@ -1271,6 +2077,18 @@ document.addEventListener('DOMContentLoaded', () => {
     renderChannels(channelData, datasets[currentPeriod], currentPeriod, true);
     renderProductTable(varyProducts(products, datasets[currentPeriod], currentPeriod));
     renderInterventions(varyInterventions(interventions, currentPeriod, datasets[currentPeriod]), avgReturnCost);
+    renderFinancialDrillDown();
+    renderCustomerIntelligence();
+    renderDisposition();
+    renderRecovery();
+    renderResolution();
+    renderPreventionAnalytics(datasets[currentPeriod]);
+    renderReturnTiming(true);
+    renderMarginImpact();
+    renderGoalTracking();
+    renderCohortTracking();
+    renderReturnFunnel();
+    renderProjectedSavings();
 
     // Rebuild company list to update active state
     buildCompanyList();
@@ -1524,6 +2342,7 @@ document.addEventListener('DOMContentLoaded', () => {
     resizeTimer = setTimeout(() => {
       renderChart(datasets[currentPeriod], false);
       renderSparkline(datasets[currentPeriod], false);
+      renderReturnTiming(false);
     }, 150);
   });
 
@@ -1558,6 +2377,13 @@ document.addEventListener('DOMContentLoaded', () => {
       renderChart(datasets[currentPeriod], false);
       renderReasons(false, varyReasons(reasonsData, datasets[currentPeriod], currentPeriod));
       renderSparkline(datasets[currentPeriod], false);
+      renderDisposition();
+      renderReturnTiming(false);
+      renderMarginImpact();
+      renderGoalTracking();
+      renderCohortTracking();
+      renderReturnFunnel();
+      renderProjectedSavings();
     });
   }
 
@@ -1571,4 +2397,16 @@ document.addEventListener('DOMContentLoaded', () => {
   renderChannels(channelData, datasets[currentPeriod], currentPeriod, true);
   renderProductTable(varyProducts(products, datasets[currentPeriod], currentPeriod));
   renderInterventions(varyInterventions(interventions, currentPeriod, datasets[currentPeriod]), avgReturnCost);
+  renderFinancialDrillDown();
+  renderCustomerIntelligence();
+  renderDisposition();
+  renderRecovery();
+  renderResolution();
+  renderPreventionAnalytics(datasets[currentPeriod]);
+  renderReturnTiming(true);
+  renderMarginImpact();
+  renderGoalTracking();
+  renderCohortTracking();
+  renderReturnFunnel();
+  renderProjectedSavings();
 });
